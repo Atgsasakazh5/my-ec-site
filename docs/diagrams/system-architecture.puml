@@ -1,0 +1,41 @@
+@startuml EC Site Architecture - Physical
+
+' ====== アクターの定義 ======
+actor "一般ユーザー" as user
+actor "サイト管理者" as admin
+
+' ====== AWSクラウド環境の定義 ======
+cloud "AWS" {
+    component "Amazon EventBridge\n(Scheduler)" as scheduler
+
+    node "コンテナ実行環境" as compute {
+        component "Spring Boot App\n(AWS App Runner / Fargate)" as backend
+    }
+    
+    database "Amazon RDS\n(for MySQL)" as rds
+    database "Amazon ElastiCache\n(for Redis)" as elasticache
+    storage "Amazon S3\n(商品画像など)" as s3
+}
+
+' ====== 外部サービスの定義 ======
+cloud "External Services" {
+    component "Stripe" as stripe
+    component "AWS SES" as ses
+}
+
+
+' ====== 関係性の定義 ======
+user --> compute : "HTTPS"
+admin --> compute : "HTTPS"
+
+backend ..> rds : "データの読み書き"
+backend ..> elasticache : "セッション情報/キャッシュ"
+backend ..> s3 : "画像のアップロード/取得"
+
+backend --> stripe : "決済処理 (API)"
+backend --> ses : "注文確認メールなど (API)"
+
+scheduler -> compute : "バッチ処理の起動\n(週次のメールマガジン配信)"
+
+
+@enduml

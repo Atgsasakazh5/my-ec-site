@@ -1,0 +1,161 @@
+@startuml EC Site ERD
+
+' 図の見た目を整える skinparam
+skinparam linetype ortho
+skinparam monochrome true
+hide empty members
+
+' --- エンティティ（テーブル）の定義 ---
+
+' ユーザーテーブル
+entity "users" {
+    + id [PK] : BIGINT <<AutoIncrement>>
+    --
+    * name : VARCHAR(255)
+    * email : VARCHAR(255) <<Unique>>
+    * password : VARCHAR(255)
+    * address : VARCHAR(255)
+    * subscribes_newsletter : BOOLEAN
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+}
+
+' 商品カテゴリテーブル
+entity "categories" {
+    + id [PK] : INT <<AutoIncrement>>
+    --
+    * name : VARCHAR(255)
+}
+
+' 商品テーブル
+entity "products" {
+    + id [PK] : BIGINT <<AutoIncrement>>
+    --
+    # category_id [FK] : INT
+    * name : VARCHAR(255)
+    * price : INT
+    * description : TEXT
+    * image_url : VARCHAR(255)
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+}
+
+' 注文テーブル
+entity "orders" {
+    + id [PK] : BIGINT <<AutoIncrement>>
+    --
+    # user_id [FK] : BIGINT
+    * status : VARCHAR(50)
+    * total_price : INT
+    ' --- 配送先情報 ---
+    * shipping_address : VARCHAR(255)
+    * shipping_postal_code : VARCHAR(10)
+    * shipping_name : VARCHAR(255)
+    ' ---
+    * ordered_at : TIMESTAMP
+    * created_at : TIMESTAMP
+}
+
+' 注文明細テーブル（中間テーブル）
+entity "order_details" {
+    + id [PK] : BIGINT <<AutoIncrement>>
+    --
+    # order_id [FK] : BIGINT
+    # product_id [FK] : BIGINT
+    * quantity : INT
+    * price_at_order : INT
+}
+
+' 在庫テーブル
+entity "inventories" {
+    + id [PK]
+    --
+    # product_id [FK] <<Unique>>
+    * quantity : INT
+    * updated_at : TIMESTAMP
+}
+
+' カートテーブル
+entity "carts" {
+    + id [PK]
+    --
+    # user_id [FK] <<Unique>>
+}
+
+' カート内商品テーブル
+entity "cart_items" {
+    + id [PK]
+    --
+    # cart_id [FK]
+    # product_id [FK]
+    * quantity : INT
+}
+
+' ロールマスタテーブル
+entity "roles" {
+    + id [PK] : INT <<AutoIncrement>>
+    --
+    * name : VARCHAR(50) <<Unique>>  ' 例: ROLE_ADMIN, ROLE_USER
+}
+
+' ユーザーとロールの中間テーブル
+entity "user_roles" {
+    # user_id [FK]
+    # role_id [FK]
+    --
+    <<PK>> (user_id, role_id)
+}
+
+' メールマガジン管理テーブル
+entity "newsletters" {
+    + id [PK] : BIGINT <<AutoIncrement>>
+    --
+    * subject : VARCHAR(255)
+    * body : TEXT
+    * status : VARCHAR(50)
+    * scheduled_at : TIMESTAMP
+    * sent_at : TIMESTAMP
+}
+
+' メールマガジン配信ログテーブル
+entity "newsletter_logs" {
+    + id [PK] : BIGINT <<AutoIncrement>>
+    --
+    # newsletter_id [FK] : BIGINT
+    # user_id [FK] : BIGINT
+    * status : VARCHAR(50)
+    * created_at : TIMESTAMP
+}
+
+
+' --- リレーションシップ（関係）の定義 ---
+
+' ユーザーと注文 (1対多)
+users ||--o{orders
+
+' カテゴリと商品 (1対多)
+categories ||--o{products
+
+' 注文と注文明細 (1対多)
+orders ||--o{order_details
+
+' 商品と注文明細 (1対多)
+products ||--o{order_details
+
+' 商品と在庫は1対1
+products ||--|| inventories
+
+' カート機能のリレーション
+users ||--|| carts
+carts ||--o{cart_items
+products ||--o{cart_items
+
+'ユーザーロールのリレーション
+users ||--o{user_roles
+roles ||--o{user_roles
+
+' メールマガジンのリレーション
+newsletters ||--o{newsletter_logs
+users ||--o{newsletter_logs
+
+@enduml
