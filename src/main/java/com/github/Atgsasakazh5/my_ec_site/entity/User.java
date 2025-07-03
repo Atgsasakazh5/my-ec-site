@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode(of = "id")
-
 public class User {
 
     @Id
