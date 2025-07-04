@@ -29,7 +29,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     @ToString.Exclude   // ログにパスワードが出力されないようにする
     private String password;
 
