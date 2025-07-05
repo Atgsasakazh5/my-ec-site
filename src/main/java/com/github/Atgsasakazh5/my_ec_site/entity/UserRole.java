@@ -21,5 +21,5 @@ public class UserRole {
     @Id // このフィールドも複合主キーの一部であることを示す
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id") // DB上の外部キーカラム名を指定
-    private RoleName role;
+    private Role role;
 }
