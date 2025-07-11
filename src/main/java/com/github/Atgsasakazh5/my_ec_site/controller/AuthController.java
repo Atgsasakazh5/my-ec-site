@@ -2,6 +2,7 @@ package com.github.Atgsasakazh5.my_ec_site.controller;
 
 import com.github.Atgsasakazh5.my_ec_site.dto.SignUpRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.ApiResponse;
+import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
 import com.github.Atgsasakazh5.my_ec_site.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -22,10 +23,9 @@ public class AuthController {
 
     // ユーザー登録のエンドポイント
      @PostMapping("/signup")
-     public ResponseEntity<ApiResponse> registerUser(@Valid @RequestBody SignUpRequestDto signUpRequestDto) {
-         userService.register(signUpRequestDto);
+     public ResponseEntity<UserDto> registerUser(@Valid @RequestBody SignUpRequestDto signUpRequestDto) {
+         UserDto createdUser = userService.register(signUpRequestDto);
 
-         ApiResponse response = new ApiResponse(true, "ユーザー登録が成功しました");
-         return new ResponseEntity<>(response, HttpStatus.CREATED);
+         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
      }
 }

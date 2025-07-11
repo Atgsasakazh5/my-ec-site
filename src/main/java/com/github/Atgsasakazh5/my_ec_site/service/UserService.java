@@ -1,12 +1,14 @@
 package com.github.Atgsasakazh5.my_ec_site.service;
 
 import com.github.Atgsasakazh5.my_ec_site.dto.SignUpRequestDto;
+import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.RoleName;
 import com.github.Atgsasakazh5.my_ec_site.entity.User;
 import com.github.Atgsasakazh5.my_ec_site.repository.RoleRepository;
 import com.github.Atgsasakazh5.my_ec_site.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
@@ -23,7 +25,8 @@ public class UserService {
         this.roleRepository = roleRepository;
     }
 
-    public void register(SignUpRequestDto signUpRequestDto) {
+    @Transactional
+    public UserDto register(SignUpRequestDto signUpRequestDto) {
         //emailの重複チェック
         if (userRepository.existsByEmail(signUpRequestDto.email())) {
             throw new IllegalArgumentException("メールアドレスはすでに使用されています");
@@ -45,7 +48,9 @@ public class UserService {
         user.setSubscribingNewsletter(signUpRequestDto.subscribingNewsletter());
         user.setRoles(Set.of(role)); // ユーザーにロールを追加
 
-        userRepository.save(user);
-
+        User savedUser = userRepository.save(user);
+        return new UserDto(savedUser.getId(),
+                           savedUser.getName(),
+                           savedUser.getEmail());
     }
 }
