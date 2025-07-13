@@ -29,7 +29,7 @@ public class UserService {
     public UserDto register(SignUpRequestDto signUpRequestDto) {
         //emailの重複チェック
         if (userRepository.existsByEmail(signUpRequestDto.email())) {
-            throw new IllegalArgumentException("メールアドレスはすでに使用されています");
+            throw new IllegalStateException("メールアドレスはすでに使用されています");
         }
 
         //Roleの取得
