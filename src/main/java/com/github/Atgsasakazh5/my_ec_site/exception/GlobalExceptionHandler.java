@@ -3,6 +3,7 @@ package com.github.Atgsasakazh5.my_ec_site.exception;
 import com.github.Atgsasakazh5.my_ec_site.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -28,5 +29,11 @@ public class GlobalExceptionHandler {
 
         ApiResponse response = new ApiResponse(false, errorMessage);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse> badCredentialsException(BadCredentialsException e) {
+        ApiResponse response = new ApiResponse(false, "メールアドレスまたはパスワードが正しくありません");
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 }
