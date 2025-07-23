@@ -53,4 +53,11 @@ public class UserService {
                            savedUser.getName(),
                            savedUser.getEmail());
     }
+
+    public UserDto findByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません"));
+
+        return new UserDto(user.getId(), user.getName(), user.getEmail());
+    }
 }
