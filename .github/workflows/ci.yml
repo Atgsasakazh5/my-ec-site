@@ -12,9 +12,9 @@ on:
 
 # 実行するジョブを定義
 jobs:
-  # 'build' という名前のジョブ (名前は任意)
+  # 'build' という名前のジョブ
   build:
-    # ジョブを実行する仮想環境OSを指定 (Ubuntuの最新版)
+    # ジョブを実行する仮想環境OSを指定
     runs-on: ubuntu-latest
 
     # ジョブ内のステップ(手順)を定義
@@ -24,23 +24,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ステップ2: Java (JDK) 環境をセットアップする
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      # ステップ3: Mavenの依存関係をキャッシュする (ビルド高速化のため)
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      # --- ビルドとテスト ---
-      # ステップ4: Mavenでビルドとテストを実行する
-      - name: Build and test with Maven
-        run: mvn -B package --file pom.xml
+        # --- Docker上でテストを実行 ---
+      - name: Build and Test with Docker Compose
+        run: docker-compose up --build --exit-code-from app
