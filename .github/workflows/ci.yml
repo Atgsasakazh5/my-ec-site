@@ -26,4 +26,4 @@ jobs:
 
         # --- Docker上でテストを実行 ---
       - name: Build and Test with Docker Compose
-        run: docker-compose up --build --exit-code-from app
+        run: docker compose up --build --exit-code-from app
