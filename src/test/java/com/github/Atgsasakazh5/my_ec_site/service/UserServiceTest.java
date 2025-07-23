@@ -104,7 +104,7 @@ class UserServiceTest {
 
         // Act /Assert
         assertThatThrownBy(() -> userService.register(dto))
-                .isInstanceOf(IllegalArgumentException.class) // スローされた例外の型を検証
+                .isInstanceOf(IllegalStateException.class) // スローされた例外の型を検証
                 .hasMessage("メールアドレスはすでに使用されています"); // スローされた例外のメッセージを検証
 
         // Assert
