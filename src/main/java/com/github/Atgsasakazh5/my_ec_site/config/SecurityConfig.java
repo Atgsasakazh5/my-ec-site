@@ -22,6 +22,13 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+//    public static void main(String[] args) {
+//        String password = "password123";
+//        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+//        String hashedPassword = passwordEncoder.encode(password);
+//        System.out.println("Hashed Password: " + hashedPassword);
+//    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         http
