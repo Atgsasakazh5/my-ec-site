@@ -24,6 +24,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ステップ2: JDK 21のセットアップとMavenキャッシュの有効化
+      - name: Set up JDK 21 and Cache Maven packages
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
         # --- Docker上でテストを実行 ---
-      - name: Build and Test with Docker Compose
-        run: docker compose up --build --exit-code-from app
+      - name: Run tests with Docker Compose
+        run: docker compose up --build --abort-on-container-exit --exit-code-from app

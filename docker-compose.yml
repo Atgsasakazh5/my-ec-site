@@ -17,10 +17,14 @@ services:
 
   # Spring Bootアプリケーションサービス
   app:
-    build: . # Dockerfileがある現在のディレクトリをビルドする
+    build:
+      context: .
+      target: builder
     depends_on:
-      - db # dbサービスが起動してからappサービスを起動する
+      db:
+        condition: service_healthy # dbサービスが起動してからappサービスを起動する
     environment:
+      SPRING_PROFILES_ACTIVE: test  # 'test'プロファイルを有効にする
       # Spring Bootが接続するDBの情報を環境変数で設定
       DB_USERNAME: root
       DB_PASSWORD: 1234
