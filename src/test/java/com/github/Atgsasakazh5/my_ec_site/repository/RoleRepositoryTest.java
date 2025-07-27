@@ -6,7 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
@@ -15,7 +15,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
-//@ActiveProfiles("test")
+@Import(RoleRepository.class)
+@ActiveProfiles("test")
 class RoleRepositoryTest {
 
     @Autowired
@@ -24,10 +25,6 @@ class RoleRepositoryTest {
     @DisplayName("ロール名でロールを検索できること")
     @Test
     void findByName_shouldReturnRole_whenNameExists() {
-        // Arrange
-        // テスト用のデータを保存
-        roleRepository.save(new Role(null, RoleName.ROLE_USER));
-        roleRepository.save(new Role(null, RoleName.ROLE_ADMIN));
 
         // Act
         // ROLE_USERで検索
@@ -42,7 +39,6 @@ class RoleRepositoryTest {
     @DisplayName("存在しないロール名で検索すると空のOptionalを返すこと")
     @Test
     void findByName_shouldReturnEmpty_whenNameNotExists() {
-        // Arrange
 
         // Act
         // 存在しないロール名で検索
@@ -56,13 +52,13 @@ class RoleRepositoryTest {
     @Test
     void save_shouldGenerateId_whenRoleIsSaved() {
         // Arrange
-        Role role = new Role(null, RoleName.ROLE_USER);
+        Role role = new Role(null, RoleName.ROLE_TEST); // IDはnullで自動生成されることを期待
 
         // Act
         Role savedRole = roleRepository.save(role);
 
         // Assert
         assertNotNull(savedRole.getId()); // IDが自動生成されていることを確認
-        assertEquals(RoleName.ROLE_USER, savedRole.getName()); // 名前が正しいことを確認
+        assertEquals(RoleName.ROLE_TEST, savedRole.getName()); // 名前が正しいことを確認
     }
 }

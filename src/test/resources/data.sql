@@ -1,5 +1,4 @@
 INSERT INTO roles (name) VALUES ('ROLE_USER');
-INSERT INTO roles (name) VALUES ('ROLE_ADMIN');
 
 -- usersテーブルにテストユーザーを1件挿入
 INSERT INTO users
