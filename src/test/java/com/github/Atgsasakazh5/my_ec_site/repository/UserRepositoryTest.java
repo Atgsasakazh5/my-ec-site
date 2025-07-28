@@ -25,10 +25,10 @@ class UserRepositoryTest {
     @Test
     void findByName_shouldReturnUser_whenNameExists() {
         // Arrange
-        String name = "testUser";
+        String name = "findByNameTestUser";
         User user = new User();
         user.setName(name);
-        user.setEmail("emailtest@mail.com");
+        user.setEmail("findByNameTestUser@mail.com");
         user.setPassword("password123");
         user.setAddress("123 Test St");
         user.setSubscribingNewsletter(true);
