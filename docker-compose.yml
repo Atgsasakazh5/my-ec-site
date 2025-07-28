@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # MySQLデータベースサービス
   db:
-    image: mysql:8.0
+    image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: 1234 # テスト用の仮パスワード
       MYSQL_DATABASE: my_ec_site_db_test # テスト専用DB

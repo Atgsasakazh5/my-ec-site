@@ -12,7 +12,7 @@ CREATE TABLE roles (
 
 -- users テーブル
 CREATE TABLE users (
-    id BIGINT AUTO_INCREMENT(1000) PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(100) NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE users (
     subscribing_newsletter BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
-);
+) AUTO_INCREMENT = 1000;
 
 -- user_roles 中間テーブル
 CREATE TABLE user_roles (

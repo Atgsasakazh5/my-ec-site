@@ -18,10 +18,6 @@ RUN ./mvnw dependency:go-offline
 # ソースコードをコピー
 COPY src ./src
 
-# ★このステージの最終成果物として、テスト済みのJARファイルを生成
-# CIのテストが成功した後に本番イメージを作ることを想定し、ここでもテストをスキップ
-RUN ./mvnw package -DskipTests
-
 
 # =================================================================
 # STAGE 2: 最終段階 (本番環境用の軽量イメージ)
@@ -31,7 +27,11 @@ FROM eclipse-temurin:21-jdk-jammy
 # 作業ディレクトリを設定
 WORKDIR /app
 
-# ★'builder'ステージから、作成されたJARファイルのみをコピー
+RUN --mount=type=cache,target=/root/.m2 \
+    --mount=type=bind,source=.,target=/app \
+    ./mvnw package -DskipTests
+
+# builderステージから、作成されたJARファイルのみをコピー
 COPY --from=builder /app/target/*.jar app.jar
 
 # コンテナ起動時にアプリケーションを実行するコマンド
