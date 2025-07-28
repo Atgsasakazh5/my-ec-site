@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
@@ -13,7 +14,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
-//@ActiveProfiles("test")
+@Import(UserRepository.class)
+@ActiveProfiles("test")
 class UserRepositoryTest {
 
     @Autowired
@@ -26,7 +28,7 @@ class UserRepositoryTest {
         String name = "testUser";
         User user = new User();
         user.setName(name);
-        user.setEmail("test@mail.com");
+        user.setEmail("emailtest@mail.com");
         user.setPassword("password123");
         user.setAddress("123 Test St");
         user.setSubscribingNewsletter(true);

@@ -71,7 +71,7 @@ public class RoleRepository implements RoleDao {
         // 生成されたIDを取得
         int generatedId = keyHolder.getKey().intValue();
 
-        // ★★★ セッターがないので、IDを含む新しいインスタ-ンスを生成して返す ★★★
+        // セッターがないので、IDを含む新しいインスタ-ンスを生成して返す
         return new Role(generatedId, role.getName());
     }
 

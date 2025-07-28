@@ -5,8 +5,12 @@ import com.github.Atgsasakazh5.my_ec_site.entity.User;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
@@ -72,21 +76,35 @@ public class UserRepository implements UserDao {
     @Override
     public boolean existsByEmail(String email) {
         String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
-        // queryForObjectの引数の渡し方は、Object[]よりも直接渡す方がタイプセーフです
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email);
         return count != null && count > 0;
     }
 
+    @Override
     public User save(User user) {
         String sql = "INSERT INTO users (name, email, password, address, subscribing_newsletter, created_at, updated_at) " +
                 "VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
-        jdbcTemplate.update(sql, user.getName(), user.getEmail(), user.getPassword(),
-                user.getAddress(), user.isSubscribingNewsletter());
 
-        // IDを取得するために再度クエリを実行
-        String findSql = "SELECT * FROM users WHERE email = ?";
+        // 生成されたキー（ID）を格納するKeyHolderを準備
+        KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        return jdbcTemplate.queryForObject(findSql, userRowMapper, user.getEmail());
+        // KeyHolderを使ってIDを取得できるupdateメソッドを呼び出す
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, user.getName());
+            ps.setString(2, user.getEmail());
+            ps.setString(3, user.getPassword());
+            ps.setString(4, user.getAddress());
+            ps.setBoolean(5, user.isSubscribingNewsletter());
+            return ps;
+        }, keyHolder);
 
+        // KeyHolderから生成されたIDを取得して、元のUserオブジェクトに設定する
+        // UserエンティティにsetId(Long id)メソッドがあることを想定しています
+        if (keyHolder.getKey() != null) {
+            user.setId(keyHolder.getKey().longValue());
+        }
+
+        return user;
     }
 }
