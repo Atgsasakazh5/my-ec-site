@@ -1,6 +1,7 @@
 package com.github.Atgsasakazh5.my_ec_site.repository;
 
 import com.github.Atgsasakazh5.my_ec_site.entity.Category;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class CategoryDaoImpl implements CategoryDao{
+public class CategoryDaoImpl implements CategoryDao {
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -58,7 +59,7 @@ public class CategoryDaoImpl implements CategoryDao{
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, name);
             return ps;
-            }, keyHolder);
+        }, keyHolder);
 
         Integer generatedId = keyHolder.getKey().intValue();
         return new Category(generatedId, name);
@@ -71,7 +72,7 @@ public class CategoryDaoImpl implements CategoryDao{
         try {
             Category category = jdbcTemplate.queryForObject(sql, categoryRowMapper, id);
             return Optional.ofNullable(category);
-        } catch (Exception e) {
+        } catch (EmptyResultDataAccessException e) {
             // カテゴリが見つからなかった場合はemptyを返す
             return Optional.empty();
         }
