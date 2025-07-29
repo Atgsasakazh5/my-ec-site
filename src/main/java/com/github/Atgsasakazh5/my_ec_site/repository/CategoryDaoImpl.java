@@ -1,0 +1,79 @@
+package com.github.Atgsasakazh5.my_ec_site.repository;
+
+import com.github.Atgsasakazh5.my_ec_site.entity.Category;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
+
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public class CategoryDaoImpl implements CategoryDao{
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public CategoryDaoImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    private final RowMapper<Category> categoryRowMapper = (rs, rowNum) ->
+            new Category(rs.getInt("id"), rs.getString("name"));
+    ;
+
+    @Override
+    public List<Category> findAll() {
+        String sql = "SELECT * FROM categories order by id";
+
+        return jdbcTemplate.query(sql, categoryRowMapper);
+
+    }
+
+    @Override
+    public Category update(Integer id, String name) {
+        String sql = "UPDATE categories SET name = ? WHERE id = ?";
+
+        jdbcTemplate.update(sql, name, id);
+        return new Category(id, name);
+
+    }
+
+    @Override
+    public void delete(Integer id) {
+        String sql = "DELETE FROM categories WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+
+    }
+
+    @Override
+    public Category save(String name) {
+        String sql = "INSERT INTO categories (name) VALUES (?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, name);
+            return ps;
+            }, keyHolder);
+
+        Integer generatedId = keyHolder.getKey().intValue();
+        return new Category(generatedId, name);
+
+    }
+
+    @Override
+    public Optional<Category> findById(Integer id) {
+        String sql = "SELECT * FROM categories WHERE id = ?";
+        try {
+            Category category = jdbcTemplate.queryForObject(sql, categoryRowMapper, id);
+            return Optional.ofNullable(category);
+        } catch (Exception e) {
+            // カテゴリが見つからなかった場合はemptyを返す
+            return Optional.empty();
+        }
+    }
+}
