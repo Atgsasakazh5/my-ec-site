@@ -10,15 +10,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode(of = "id")
-public class Product {
+public class Inventory {
 
     private Long id;
-    private String name;
-    private Integer price;
-    private String description;
-    private String imageUrl;
-    private Integer categoryId; // 外部キー
-    private LocalDateTime createdAt;
+    private Long skuId; // 外部キー
+    private Integer quantity;
     private LocalDateTime updatedAt;
-
 }

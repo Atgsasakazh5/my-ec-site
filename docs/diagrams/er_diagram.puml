@@ -61,16 +61,27 @@ entity "order_details" {
     + id [PK] : BIGINT <<AutoIncrement>>
     --
     # order_id [FK] : BIGINT
-    # product_id [FK] : BIGINT
+    # sku_id [FK] : BIGINT
     * quantity : INT
     * price_at_order : INT
 }
 
+' SKUテーブル（商品に対するSKU情報）
+entity "skus" {
+    + id [PK] : BIGINT <<AutoIncrement>>
+    --
+    # product_id [FK] : BIGINT
+    * name : VARCHAR(100) <<Unique>>
+    * extra_price : INT
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+}
+
 ' 在庫テーブル
 entity "inventories" {
-    + id [PK]
+    + id [PK] : BIGINT <<AutoIncrement>>
     --
-    # product_id [FK] <<Unique>>
+    # sku_id : BIGINT <<Unique>>
     * quantity : INT
     * updated_at : TIMESTAMP
 }
@@ -87,7 +98,7 @@ entity "cart_items" {
     + id [PK]
     --
     # cart_id [FK]
-    # product_id [FK]
+    # sku_id [FK]
     * quantity : INT
 }
 
@@ -128,22 +139,28 @@ entity "newsletter_logs" {
 }
 
 
-' --- リレーションシップ（関係）の定義 ---
+' --- リレーションシップの定義 ---
 
-' ユーザーと注文 (1対多)
+' ユーザーと注文 1対多
 users ||--o{orders
 
-' カテゴリと商品 (1対多)
+' カテゴリと商品 1対多
 categories ||--o{products
 
-' 注文と注文明細 (1対多)
+' 注文と注文明細 1対多
 orders ||--o{order_details
 
-' 商品と注文明細 (1対多)
+' 商品と注文明細 1対多
 products ||--o{order_details
 
 ' 商品と在庫は1対1
 products ||--|| inventories
+
+' 商品とSKUは1対多
+products ||--o{skus
+
+' SKUと在庫は1対1
+skus ||--|| inventories
 
 ' カート機能のリレーション
 users ||--|| carts

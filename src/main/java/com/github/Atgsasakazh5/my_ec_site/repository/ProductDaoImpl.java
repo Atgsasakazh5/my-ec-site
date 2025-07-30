@@ -1,0 +1,82 @@
+package com.github.Atgsasakazh5.my_ec_site.repository;
+
+import com.github.Atgsasakazh5.my_ec_site.entity.Product;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
+
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.Optional;
+
+@Repository
+public class ProductDaoImpl implements ProductDao{
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public ProductDaoImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    private final RowMapper<Product> productRowMapper = (rs, rowNum) ->
+            new Product(rs.getLong("id"), rs.getString("name"), rs.getInt("price"),
+                        rs.getString("description"), rs.getString("image_url"),
+                        rs.getInt("category_id"), rs.getTimestamp("created_at").toLocalDateTime(),
+                        rs.getTimestamp("updated_at").toLocalDateTime());
+
+    @Override
+    public Product save(Product product) {
+        String sql = "INSERT INTO products (name, price, description, image_url, category_id, created_At, updated_at) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, product.getName());
+            ps.setInt(2, product.getPrice());
+            ps.setString(3, product.getDescription());
+            ps.setString(4, product.getImageUrl());
+            ps.setInt(5, product.getCategoryId());
+            ps.setTimestamp(6, Timestamp.valueOf(product.getCreatedAt()));
+            ps.setTimestamp(7, Timestamp.valueOf(product.getUpdatedAt()));
+            return ps;
+        }, keyHolder);
+
+        product.setId(keyHolder.getKey().longValue());
+
+        return product;
+    }
+
+    @Override
+    public Optional<Product> findById(Long id) {
+
+        String sql = "SELECT * FROM products WHERE id = ?";
+        try {
+            Product product = jdbcTemplate.queryForObject(sql, productRowMapper, id);
+            return Optional.ofNullable(product);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+
+    }
+
+    @Override
+    public Product update(Product product) {
+        String sql = "UPDATE products SET name = ?, price = ?, description = ?, image_url = ?, " +
+                     "category_id = ?, updated_at = ? WHERE id = ?";
+        jdbcTemplate.update(sql, product.getName(), product.getPrice(), product.getDescription(),
+                            product.getImageUrl(), product.getCategoryId(),
+                            Timestamp.valueOf(product.getUpdatedAt()), product.getId());
+        return product;
+    }
+
+    @Override
+    public void delete(Long id) {
+        String sql = "DELETE FROM products WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+
+    }
+}
