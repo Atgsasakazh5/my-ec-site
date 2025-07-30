@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @JdbcTest
 @Import(CategoryDaoImpl.class)
-@ActiveProfiles("h2")
+//@ActiveProfiles("h2")
 class CategoryDaoImplTest {
 
     @Autowired

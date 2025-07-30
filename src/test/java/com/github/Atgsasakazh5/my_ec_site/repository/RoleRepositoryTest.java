@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @Import(RoleRepository.class)
-@ActiveProfiles("test")
+//@ActiveProfiles("h2")
 class RoleRepositoryTest {
 
     @Autowired
