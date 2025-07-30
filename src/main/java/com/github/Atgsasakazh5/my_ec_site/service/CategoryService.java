@@ -21,6 +21,11 @@ public class CategoryService {
 
     @Transactional
     public CategoryDto createCategory(String name) {
+        //既に同じ名前のカテゴリーが存在する場合は、例外をスロー
+        if(categoryDao.findByName(name).isPresent()){
+            throw new IllegalStateException("カテゴリー名はすでに存在します: " + name);
+        }
+
         var category = categoryDao.save(name);
         return new CategoryDto(category.getId(), category.getName());
     }

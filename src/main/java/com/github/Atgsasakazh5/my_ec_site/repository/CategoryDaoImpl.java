@@ -77,4 +77,15 @@ public class CategoryDaoImpl implements CategoryDao {
             return Optional.empty();
         }
     }
+
+    @Override
+    public Optional<Category> findByName(String name) {
+        String sql = "SELECT * FROM categories WHERE name = ?";
+        try {
+            Category category = jdbcTemplate.queryForObject(sql, categoryRowMapper, name);
+            return Optional.ofNullable(category);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
 }

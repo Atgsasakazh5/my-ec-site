@@ -12,10 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -24,8 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@ActiveProfiles("h2")
 class AuthControllerTest {
 
     @Autowired
@@ -82,7 +79,6 @@ class AuthControllerTest {
         // Arrange
         var signUpRequestDto = new SignUpRequestDto("testuser", "test@email.com",
                 "password123", "Tokyo", true);
-        // Mock UserServiceのregisterメソッドがIllegalArgumentExceptionをスローするように設定
         doThrow(new IllegalStateException("メールアドレスはすでに使用されています"))
                 .when(userService).register(any(SignUpRequestDto.class));
         // Act & Assert

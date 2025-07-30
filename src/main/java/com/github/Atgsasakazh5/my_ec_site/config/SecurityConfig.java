@@ -44,6 +44,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // "/api/auth/**"へのリクエストは全て許可 (認証不要)
                         .requestMatchers("/api/auth/**").permitAll()
+                        // "/api/admin/**"へのリクエストはADMINロールを持つユーザーのみ許可
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // 上記以外のリクエストは全て認証が必要
                         .anyRequest().authenticated()
                 );

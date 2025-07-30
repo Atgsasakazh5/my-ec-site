@@ -12,4 +12,5 @@ public interface CategoryDao {
     void delete(Integer id);
     Category save(String name);
     Optional<Category> findById(Integer id);
+    Optional<Category> findByName(String name);
 }
