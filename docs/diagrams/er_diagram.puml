@@ -71,10 +71,14 @@ entity "skus" {
     + id [PK] : BIGINT <<AutoIncrement>>
     --
     # product_id [FK] : BIGINT
-    * name : VARCHAR(100) <<Unique>>
+    * size : VARCHAR(100)
+    * color : VARCHAR(100)
     * extra_price : INT
     * created_at : TIMESTAMP
     * updated_at : TIMESTAMP
+
+    ' 複合ユニーク制約
+  <<UNIQUE>> (product_id, size, color)
 }
 
 ' 在庫テーブル
