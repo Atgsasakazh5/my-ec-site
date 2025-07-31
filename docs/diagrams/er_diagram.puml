@@ -71,6 +71,7 @@ entity "skus" {
     + id [PK] : BIGINT <<AutoIncrement>>
     --
     # product_id [FK] : BIGINT
+    ' ON DELETE CASCADE
     * size : VARCHAR(100)
     * color : VARCHAR(100)
     * extra_price : INT
@@ -86,6 +87,7 @@ entity "inventories" {
     + id [PK] : BIGINT <<AutoIncrement>>
     --
     # sku_id : BIGINT <<Unique>>
+    ' ON DELETE CASCADE
     * quantity : INT
     * updated_at : TIMESTAMP
 }

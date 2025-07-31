@@ -11,9 +11,12 @@ public interface SkuDao {
 
     Optional<Sku> findById(Long id);
 
-    Optional<List<Sku>> findByProductId(Long productId);
+    List<Sku> findByProductId(Long productId);
 
     Sku update(Sku sku);
 
     void delete(Long id);
+
+    // 複合ユニーク制約をチェックするためのメソッド
+    Optional<Sku> findByProductIdAndSizeAndColor(Long productId, String size, String color);
 }

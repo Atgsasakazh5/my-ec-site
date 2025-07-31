@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 public class Sku {
     private Long id;
     private Long productId;
-    private String name;
+    private String size;
+    private String color;
     private Integer extraPrice;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
