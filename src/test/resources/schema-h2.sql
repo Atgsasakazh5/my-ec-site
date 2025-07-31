@@ -41,7 +41,8 @@ CREATE TABLE categories (
 CREATE TABLE products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    description TEXT,
+    description TEXT(1000),
+    image_url VARCHAR(255),
     price DECIMAL(10, 2) NOT NULL,
     category_id INT NOT NULL,
     created_at TIMESTAMP NOT NULL,
