@@ -8,8 +8,17 @@ import java.util.Optional;
 public interface ProductDao {
 
     Product save(Product product);
+
     Optional<Product> findById(Long id);
+
+    List<Product> findAll();
+
     Product update(Product product);
+
     void delete(Long id);
+
+    List<Product> findAll(int page, int size);
+
+    int countAll();
 
 }

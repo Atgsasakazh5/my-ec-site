@@ -4,6 +4,8 @@ import com.github.Atgsasakazh5.my_ec_site.entity.Category;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -11,15 +13,20 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+
+import static com.fasterxml.jackson.databind.type.LogicalType.Map;
 
 @Repository
 public class CategoryDaoImpl implements CategoryDao {
 
     private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public CategoryDaoImpl(JdbcTemplate jdbcTemplate) {
+    public CategoryDaoImpl(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
     private final RowMapper<Category> categoryRowMapper = (rs, rowNum) ->
@@ -87,5 +94,16 @@ public class CategoryDaoImpl implements CategoryDao {
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<Category> findByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        String sql = "SELECT * FROM categories WHERE id IN (:ids)";
+        // NamedParameterJdbcTemplateを使うとIN句を簡単に扱える
+        Map<String, List<Integer>> params = java.util.Map.of("ids", ids);
+        return namedParameterJdbcTemplate.query(sql, params, categoryRowMapper);
     }
 }

@@ -8,9 +8,16 @@ import java.util.Optional;
 public interface CategoryDao {
 
     List<Category> findAll();
+
     Category update(Integer id, String name);
+
     void delete(Integer id);
+
     Category save(String name);
+
     Optional<Category> findById(Integer id);
+
     Optional<Category> findByName(String name);
+
+    List<Category> findByIds(List<Integer> ids);
 }

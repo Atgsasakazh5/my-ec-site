@@ -11,10 +11,11 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class ProductDaoImpl implements ProductDao{
+public class ProductDaoImpl implements ProductDao {
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -24,14 +25,14 @@ public class ProductDaoImpl implements ProductDao{
 
     private final RowMapper<Product> productRowMapper = (rs, rowNum) ->
             new Product(rs.getLong("id"), rs.getString("name"), rs.getInt("price"),
-                        rs.getString("description"), rs.getString("image_url"),
-                        rs.getInt("category_id"), rs.getTimestamp("created_at").toLocalDateTime(),
-                        rs.getTimestamp("updated_at").toLocalDateTime());
+                    rs.getString("description"), rs.getString("image_url"),
+                    rs.getInt("category_id"), rs.getTimestamp("created_at").toLocalDateTime(),
+                    rs.getTimestamp("updated_at").toLocalDateTime());
 
     @Override
     public Product save(Product product) {
         String sql = "INSERT INTO products (name, price, description, image_url, category_id, created_At, updated_at) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -64,12 +65,18 @@ public class ProductDaoImpl implements ProductDao{
     }
 
     @Override
+    public List<Product> findAll() {
+        String sql = "SELECT * FROM products";
+        return jdbcTemplate.query(sql, productRowMapper);
+    }
+
+    @Override
     public Product update(Product product) {
         String sql = "UPDATE products SET name = ?, price = ?, description = ?, image_url = ?, " +
-                     "category_id = ?, updated_at = ? WHERE id = ?";
+                "category_id = ?, updated_at = ? WHERE id = ?";
         jdbcTemplate.update(sql, product.getName(), product.getPrice(), product.getDescription(),
-                            product.getImageUrl(), product.getCategoryId(),
-                            Timestamp.valueOf(product.getUpdatedAt()), product.getId());
+                product.getImageUrl(), product.getCategoryId(),
+                Timestamp.valueOf(product.getUpdatedAt()), product.getId());
         return product;
     }
 
@@ -78,5 +85,20 @@ public class ProductDaoImpl implements ProductDao{
         String sql = "DELETE FROM products WHERE id = ?";
         jdbcTemplate.update(sql, id);
 
+    }
+
+    @Override
+    public List<Product> findAll(int page, int size) {
+        // OFFSETを計算
+        int offset = page * size;
+        String sql = "SELECT * FROM products ORDER BY id DESC LIMIT ? OFFSET ?";
+        return jdbcTemplate.query(sql, productRowMapper, size, offset);
+    }
+
+    @Override
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM products";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class);
+        return (count != null) ? count : 0;
     }
 }

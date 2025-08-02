@@ -4,6 +4,7 @@ import com.github.Atgsasakazh5.my_ec_site.entity.Inventory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -11,15 +12,19 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
-public class InventoryDaoImpl implements InventoryDao{
+public class InventoryDaoImpl implements InventoryDao {
 
     private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public InventoryDaoImpl(JdbcTemplate jdbcTemplate) {
+    public InventoryDaoImpl(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
     private final RowMapper<Inventory> inventoryRowMapper = (rs, rowNum) ->
@@ -31,7 +36,7 @@ public class InventoryDaoImpl implements InventoryDao{
     @Override
     public Inventory save(Inventory inventory) {
         String sql = "INSERT INTO inventories (sku_id, quantity, updated_at) " +
-                     "VALUES (?, ?, ?)";
+                "VALUES (?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -78,5 +83,16 @@ public class InventoryDaoImpl implements InventoryDao{
     public void deleteBySkuId(Long skuId) {
         String sql = "DELETE FROM inventories WHERE sku_id = ?";
         jdbcTemplate.update(sql, skuId);
+    }
+
+    @Override
+    public List<Inventory> findBySkuIdIn(List<Long> skuIds) {
+        if (skuIds == null || skuIds.isEmpty()) {
+            return List.of();
+        }
+        String sql = "SELECT * FROM inventories WHERE sku_id IN (:skuIds)";
+        // NamedParameterJdbcTemplateを使うとIN句を簡単に扱える
+        Map<String, List<Long>> params = Map.of("skuIds", skuIds);
+        return namedParameterJdbcTemplate.query(sql, params, inventoryRowMapper);
     }
 }
