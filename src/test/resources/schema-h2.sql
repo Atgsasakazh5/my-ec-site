@@ -62,7 +62,7 @@ CREATE TABLE skus (
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     FOREIGN KEY (product_id) REFERENCES products(id)
-    ON DELETE CASCADE,
+    RESTRICT,
     -- 複合ユニーク制約
     UNIQUE (product_id, size, color)
 );
@@ -74,5 +74,5 @@ CREATE TABLE inventory (
     quantity INT NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     FOREIGN KEY (sku_id) REFERENCES skus(id)
-    ON DELETE CASCADE
+    RESTRICT
 );

@@ -17,6 +17,8 @@ public interface InventoryDao {
 
     void deleteBySkuId(Long skuId);
 
+    void deleteBySkuIds(List<Long> skuIds);
+
     // 複数のSKU IDに対応する在庫を一括で取得する
     List<Inventory> findBySkuIdIn(List<Long> skuIds);
 }

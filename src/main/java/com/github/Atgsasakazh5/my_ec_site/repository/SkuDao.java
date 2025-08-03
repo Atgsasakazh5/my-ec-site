@@ -2,6 +2,7 @@ package com.github.Atgsasakazh5.my_ec_site.repository;
 
 import com.github.Atgsasakazh5.my_ec_site.entity.Sku;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +18,10 @@ public interface SkuDao {
 
     void delete(Long id);
 
+    void deleteByProductId(Long productId);
+
     // 複合ユニーク制約をチェックするためのメソッド
     Optional<Sku> findByProductIdAndSizeAndColor(Long productId, String size, String color);
+
+    List<Sku> findAllByProductIds(List<Long> productIds);
 }

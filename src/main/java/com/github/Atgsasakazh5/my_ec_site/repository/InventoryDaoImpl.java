@@ -86,6 +86,16 @@ public class InventoryDaoImpl implements InventoryDao {
     }
 
     @Override
+    public void deleteBySkuIds(List<Long> skuIds) {
+        if (skuIds == null || skuIds.isEmpty()) {
+            return;
+        }
+        String sql = "DELETE FROM inventories WHERE sku_id IN (:skuIds)";
+        Map<String, List<Long>> params = Map.of("skuIds", skuIds);
+        namedParameterJdbcTemplate.update(sql, params);
+    }
+
+    @Override
     public List<Inventory> findBySkuIdIn(List<Long> skuIds) {
         if (skuIds == null || skuIds.isEmpty()) {
             return List.of();

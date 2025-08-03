@@ -4,6 +4,7 @@ import com.github.Atgsasakazh5.my_ec_site.entity.Sku;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -12,15 +13,18 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
-public class SkuDaoImpl implements SkuDao{
+public class SkuDaoImpl implements SkuDao {
 
     private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public SkuDaoImpl(JdbcTemplate jdbcTemplate) {
+    public SkuDaoImpl(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
     private final RowMapper<Sku> skuRowMapper = (rs, rowNum) ->
@@ -33,7 +37,7 @@ public class SkuDaoImpl implements SkuDao{
     @Override
     public Sku save(Sku sku) {
         String sql = "INSERT INTO skus (product_id, size, color, extra_price, created_at, updated_at) " +
-                     "VALUES (?, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -67,10 +71,26 @@ public class SkuDaoImpl implements SkuDao{
     }
 
     @Override
+    public List<Sku> findAllByProductIds(List<Long> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return List.of();
+        }
+
+        // プレースホルダーに名前付きパラメータ ":productIds" を使用
+        String sql = "SELECT * FROM skus WHERE product_id IN (:productIds)";
+
+        // パラメータをMapに格納
+        Map<String, List<Long>> params = Map.of("productIds", productIds);
+
+        // queryメソッドで安全に実行
+        return namedParameterJdbcTemplate.query(sql, params, skuRowMapper);
+    }
+
+    @Override
     public Sku update(Sku sku) {
-        String sql = "UPDATE skus SET product_id = ?, size = ?, color = ?, extra_price = ?, " +
-                     "updated_at = ? WHERE id = ?";
-        jdbcTemplate.update(sql, sku.getProductId(), sku.getSize(), sku.getColor(),
+        String sql = "UPDATE skus SET size = ?, color = ?, extra_price = ?, " +
+                "updated_at = ? WHERE id = ?";
+        jdbcTemplate.update(sql, sku.getSize(), sku.getColor(),
                 sku.getExtraPrice(), Timestamp.valueOf(sku.getUpdatedAt()), sku.getId());
         return sku;
     }
@@ -79,6 +99,12 @@ public class SkuDaoImpl implements SkuDao{
     public void delete(Long id) {
         String sql = "DELETE FROM skus WHERE id = ?";
         jdbcTemplate.update(sql, id);
+    }
+
+    @Override
+    public void deleteByProductId(Long productId) {
+        String sql = "DELETE FROM skus WHERE product_id = ?";
+        jdbcTemplate.update(sql, productId);
     }
 
     @Override

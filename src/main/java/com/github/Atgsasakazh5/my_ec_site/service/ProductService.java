@@ -32,9 +32,83 @@ public class ProductService {
         this.categoryDao = categoryDao;
     }
 
+    private ProductDetailDto buildProductDetailDto(Product product) {
+        List<Sku> skus = skuDao.findByProductId(product.getId());
+
+        List<SkuDto> skuDtos = buildSkuDtos(skus);
+
+        CategoryDto categoryDto = categoryDao.findById(product.getCategoryId())
+                .map(c -> new CategoryDto(c.getId(), c.getName()))
+                .orElse(null);
+
+        return new ProductDetailDto(
+                product.getId(),
+                product.getName(),
+                product.getPrice(),
+                product.getDescription(),
+                product.getImageUrl(),
+                categoryDto,
+                skuDtos,
+                product.getCreatedAt(),
+                product.getUpdatedAt()
+        );
+    }
+
+    private List<SkuDto> buildSkuDtos(List<Sku> skus) {
+        if (skus == null || skus.isEmpty()) {
+            return List.of(); // 空のリストを返す
+        }
+
+        // 1. 全SKUの在庫情報を一度のクエリで取得
+        List<Long> skuIds = skus.stream().map(Sku::getId).toList();
+        Map<Long, Inventory> inventoryMap = inventoryDao.findBySkuIdIn(skuIds).stream()
+                .collect(Collectors.toMap(Inventory::getSkuId, inventory -> inventory));
+
+        // 2. SKUリストをDTOに変換
+        return skus.stream()
+                .map(sku -> {
+                    Inventory inventory = inventoryMap.getOrDefault(sku.getId(), new Inventory(null, sku.getId(), 0, null));
+                    InventoryDto inventoryDto = new InventoryDto(inventory.getQuantity());
+                    return new SkuDto(sku.getId(), sku.getSize(), sku.getColor(), sku.getExtraPrice(), inventoryDto);
+                })
+                .toList();
+    }
+
+    private List<SkuDto> buildSkuDtos(List<Sku> skus, Map<Long, Inventory> inventoryMap) {
+        // 変換元のSKUリストが空の場合は、空のDTOリストを返す
+        if (skus == null || skus.isEmpty()) {
+            return List.of();
+        }
+
+        // SKUエンティティのリストを、SkuDtoのリストに変換する
+        return skus.stream()
+                .map(sku -> {
+                    // 事前に取得したMapから、このSKUに対応する在庫情報を取得
+                    // もしMapに存在しない場合は、数量0のデフォルト在庫を生成
+                    Inventory inventory = inventoryMap.getOrDefault(
+                            sku.getId(),
+                            new Inventory(null, sku.getId(), 0, null)
+                    );
+
+                    // DTOを組み立てる
+                    InventoryDto inventoryDto = new InventoryDto(inventory.getQuantity());
+                    return new SkuDto(
+                            sku.getId(),
+                            sku.getSize(),
+                            sku.getColor(),
+                            sku.getExtraPrice(),
+                            inventoryDto
+                    );
+                })
+                .toList();
+    }
+
     @Transactional
     public ProductDetailDto createProduct(ProductCreateRequestDto requestDto) {
-        // 1. 商品を保存
+        if (categoryDao.findById(requestDto.categoryId()).isEmpty()) {
+            throw new ResourceNotFoundException("指定されたカテゴリが存在しません: " + requestDto.categoryId());
+        }
+
         Product product = new Product();
         product.setName(requestDto.name());
         product.setPrice(requestDto.price());
@@ -43,9 +117,7 @@ public class ProductService {
         product.setCategoryId(requestDto.categoryId());
         Product savedProduct = productDao.save(product);
 
-        // 2. SKUと在庫をループ内で同時に保存し、レスポンス用DTOのリストを作成
-        List<SkuDto> skuDtos = requestDto.skus().stream().map(skuRequest -> {
-            // SKUを保存
+        requestDto.skus().forEach(skuRequest -> {
             Sku sku = new Sku();
             sku.setProductId(savedProduct.getId());
             sku.setSize(skuRequest.size());
@@ -53,33 +125,13 @@ public class ProductService {
             sku.setExtraPrice(skuRequest.extraPrice());
             Sku savedSku = skuDao.save(sku);
 
-            // 在庫を保存
             Inventory inventory = new Inventory();
             inventory.setSkuId(savedSku.getId());
-            inventory.setQuantity(skuRequest.quantity()); // DTO名はSkuCreateRequestDtoのquantity()
-            Inventory savedInventory = inventoryDao.save(inventory);
+            inventory.setQuantity(skuRequest.quantity());
+            inventoryDao.save(inventory);
+        });
 
-            // レスポンス用のSkuDtoを組み立て
-            InventoryDto inventoryDto = new InventoryDto(savedInventory.getQuantity());
-            return new SkuDto(savedSku.getId(), savedSku.getSize(), savedSku.getColor(), savedSku.getExtraPrice(), inventoryDto);
-        }).collect(Collectors.toList());
-
-        // 3. 最終的なProductDetailDtoを組み立てて返す
-        CategoryDto categoryDto = categoryDao.findById(savedProduct.getCategoryId())
-                .map(c -> new CategoryDto(c.getId(), c.getName()))
-                .orElse(null);
-
-        return new ProductDetailDto(
-                savedProduct.getId(),
-                savedProduct.getName(),
-                savedProduct.getPrice(),
-                savedProduct.getDescription(),
-                savedProduct.getImageUrl(),
-                categoryDto,
-                skuDtos,
-                savedProduct.getCreatedAt(),
-                savedProduct.getUpdatedAt()
-        );
+        return buildProductDetailDto(savedProduct);
     }
 
     @Transactional
@@ -94,34 +146,7 @@ public class ProductService {
         product.setCategoryId(requestDto.categoryId());
         Product updatedProduct = productDao.update(product);
 
-        // 2. 更新された商品に紐づくSKUと在庫情報を取得
-        List<SkuDto> skuDtos = skuDao.findByProductId(updatedProduct.getId()).stream()
-                .map(sku -> {
-                    // 各SKUに対応する在庫情報を取得
-                    Inventory inventory = inventoryDao.findBySkuId(sku.getId())
-                            .orElse(new Inventory(null, sku.getId(), 0, null)); // 在庫がない場合は数量0とする
-                    InventoryDto inventoryDto = new InventoryDto(inventory.getQuantity());
-                    return new SkuDto(sku.getId(), sku.getSize(), sku.getColor(), sku.getExtraPrice(), inventoryDto);
-                })
-                .collect(Collectors.toList());
-
-        // 3. カテゴリ情報を取得
-        CategoryDto categoryDto = categoryDao.findById(updatedProduct.getCategoryId())
-                .map(c -> new CategoryDto(c.getId(), c.getName()))
-                .orElse(null); // 存在しないカテゴリIDの場合の考慮
-
-        // 4. すべての情報を結合してProductDetailDtoを返す
-        return new ProductDetailDto(
-                updatedProduct.getId(),
-                updatedProduct.getName(),
-                updatedProduct.getPrice(),
-                updatedProduct.getDescription(),
-                updatedProduct.getImageUrl(),
-                categoryDto,
-                skuDtos,
-                updatedProduct.getCreatedAt(),
-                updatedProduct.getUpdatedAt()
-        );
+        return buildProductDetailDto(updatedProduct);
     }
 
     @Transactional(readOnly = true)
@@ -130,67 +155,40 @@ public class ProductService {
         Product product = productDao.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("商品が存在しません: " + productId));
 
-        // 2. 関連するSKUを一度だけ取得
-        List<Sku> skus = skuDao.findByProductId(productId);
-
-        // 3. 全SKUの在庫情報を一度のクエリで取得
-        List<Long> skuIds = skus.stream().map(Sku::getId).toList();
-        // 取得した在庫情報を、SKU IDをキーにしたMapに変換して高速にアクセスできるようにする
-        Map<Long, Inventory> inventoryMap = inventoryDao.findBySkuIdIn(skuIds).stream()
-                .collect(Collectors.toMap(Inventory::getSkuId, inventory -> inventory));
-
-        // 4. SKUリストをDTOに変換
-        List<SkuDto> skuDtos = skus.stream()
-                .map(sku -> {
-                    Inventory inventory = inventoryMap.getOrDefault(sku.getId(), new Inventory(null, sku.getId(), 0, null));
-                    InventoryDto inventoryDto = new InventoryDto(inventory.getQuantity());
-                    return new SkuDto(sku.getId(), sku.getSize(), sku.getColor(), sku.getExtraPrice(), inventoryDto);
-                })
-                .toList();
-
-        // 5. カテゴリ情報を取得
-        CategoryDto categoryDto = categoryDao.findById(product.getCategoryId())
-                .map(c -> new CategoryDto(c.getId(), c.getName()))
-                .orElse(null);
-
-        // 6. ProductDetailDtoを組み立てて返す
-        return new ProductDetailDto(
-                product.getId(),
-                product.getName(),
-                product.getPrice(),
-                product.getDescription(),
-                product.getImageUrl(),
-                categoryDto,
-                skuDtos,
-                product.getCreatedAt(),
-                product.getUpdatedAt()
-        );
+        return buildProductDetailDto(product);
     }
 
     @Transactional(readOnly = true)
     public List<ProductDetailDto> getAllProducts() {
+        // 1. 全商品リストを取得
         List<Product> products = productDao.findAll();
+        if (products.isEmpty()) {
+            return List.of();
+        }
+
+        // 2. 関連するデータを一度のクエリでまとめて取得
+        List<Long> productIds = products.stream().map(Product::getId).toList();
+        List<Integer> categoryIds = products.stream().map(Product::getCategoryId).distinct().toList();
+
+        // SkuDaoにfindAllByProductIds(List<Long> productIds)を追加する必要がある
+        Map<Long, List<Sku>> skusByProductId = skuDao.findAllByProductIds(productIds).stream()
+                .collect(Collectors.groupingBy(Sku::getProductId));
+
+        List<Long> allSkuIds = skusByProductId.values().stream().flatMap(List::stream).map(Sku::getId).toList();
+        Map<Long, Inventory> inventoryMap = inventoryDao.findBySkuIdIn(allSkuIds).stream()
+                .collect(Collectors.toMap(Inventory::getSkuId, i -> i));
+
+        Map<Integer, CategoryDto> categoryMap = categoryDao.findByIds(categoryIds).stream()
+                .map(c -> new CategoryDto(c.getId(), c.getName()))
+                .collect(Collectors.toMap(CategoryDto::id, c -> c));
+
+        // 3. メモリ上でデータを結合してDTOを組み立てる（DBアクセスはもう発生しない）
         return products.stream()
                 .map(product -> {
-                    // 各商品に紐づくSKUを取得
-                    List<Sku> skus = skuDao.findByProductId(product.getId());
-                    // SKUの在庫情報を一度のクエリで取得
-                    List<Long> skuIds = skus.stream().map(Sku::getId).toList();
-                    Map<Long, Inventory> inventoryMap = inventoryDao.findBySkuIdIn(skuIds).stream()
-                            .collect(Collectors.toMap(Inventory::getSkuId, inventory -> inventory));
-                    // SKUをDTOに変換
-                    List<SkuDto> skuDtos = skus.stream()
-                            .map(sku -> {
-                                Inventory inventory = inventoryMap.getOrDefault(sku.getId(), new Inventory(null, sku.getId(), 0, null));
-                                InventoryDto inventoryDto = new InventoryDto(inventory.getQuantity());
-                                return new SkuDto(sku.getId(), sku.getSize(), sku.getColor(), sku.getExtraPrice(), inventoryDto);
-                            })
-                            .toList();
-                    // カテゴリ情報を取得
-                    CategoryDto categoryDto = categoryDao.findById(product.getCategoryId())
-                            .map(c -> new CategoryDto(c.getId(), c.getName()))
-                            .orElse(null);
-                    // ProductDtoを組み立てて返す
+                    List<Sku> skus = skusByProductId.getOrDefault(product.getId(), List.of());
+                    List<SkuDto> skuDtos = buildSkuDtos(skus, inventoryMap); // Mapを渡すヘルパーに改良
+                    CategoryDto categoryDto = categoryMap.get(product.getCategoryId());
+
                     return new ProductDetailDto(
                             product.getId(),
                             product.getName(),
@@ -203,8 +201,9 @@ public class ProductService {
                             product.getUpdatedAt()
                     );
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
+
 
     @Transactional(readOnly = true)
     public PageResponseDto<ProductSummaryDto> findAllPaginated(int page, int size) {
@@ -252,4 +251,134 @@ public class ProductService {
                 totalProducts
         );
     }
+
+    @Transactional
+    public void deleteProduct(Long productId) {
+        // 1. 商品を取得
+        Product product = productDao.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("商品が存在しません: " + productId));
+
+        // 2. 商品に紐づくSKUを取得
+        List<Sku> skus = skuDao.findByProductId(productId);
+        List<Long> skuIds = skus.stream().map(Sku::getId).toList();
+
+        // 3. SKUに紐づく在庫情報を削除
+        inventoryDao.deleteBySkuIds(skuIds);
+
+        // 4. SKUを削除
+        skuDao.deleteByProductId(productId);
+
+        // 5. 商品を削除
+        productDao.delete(productId);
+    }
+
+    @Transactional
+    public SkuDto createSku(Long productId, SkuCreateRequestDto requestDto) {
+        // 商品が存在するか確認
+        Product product = productDao.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("商品が存在しません: " + productId));
+
+        // SKUの重複チェック
+        skuDao.findByProductIdAndSizeAndColor(productId, requestDto.size(), requestDto.color())
+                .ifPresent(existingSku -> {
+                    throw new IllegalStateException("この商品には既に同じサイズと色のSKUが存在します: "
+                            + productId + ", サイズ: " + requestDto.size() + ", 色: " + requestDto.color());
+                });
+
+        // SKUを作成
+        Sku sku = new Sku();
+        sku.setProductId(productId);
+        sku.setSize(requestDto.size());
+        sku.setColor(requestDto.color());
+        sku.setExtraPrice(requestDto.extraPrice());
+        Sku savedSku = skuDao.save(sku);
+
+        // 在庫を作成
+        Inventory inventory = new Inventory();
+        inventory.setSkuId(savedSku.getId());
+        inventory.setQuantity(requestDto.quantity());
+        Inventory savedInventory = inventoryDao.save(inventory);
+
+        // レスポンス用のSkuDtoを組み立て
+        InventoryDto inventoryDto = new InventoryDto(savedInventory.getQuantity());
+        return new SkuDto(savedSku.getId(), savedSku.getSize(), savedSku.getColor(), savedSku.getExtraPrice(), inventoryDto);
+    }
+
+    @Transactional
+    public SkuDto updateSku(Long skuId, SkuUpdateRequestDto requestDto) {
+        // SKUを取得
+        Sku sku = skuDao.findById(skuId)
+                .orElseThrow(() -> new ResourceNotFoundException("SKUが存在しません: " + skuId));
+
+        // SKUの重複チェック
+        skuDao.findByProductIdAndSizeAndColor(sku.getProductId(), requestDto.size(), requestDto.color())
+                .ifPresent(existingSku -> {
+                    if (!existingSku.getId().equals(skuId)) {
+                        throw new IllegalStateException("この商品には既に同じサイズと色のSKUが存在します: "
+                                + sku.getProductId() + ", サイズ: " + requestDto.size() + ", 色: " + requestDto.color());
+                    }
+                });
+
+        // SKUを更新
+        sku.setId(skuId);
+        sku.setSize(requestDto.size());
+        sku.setColor(requestDto.color());
+        sku.setExtraPrice(requestDto.extraPrice());
+        Sku updatedSku = skuDao.update(sku);
+
+        // 在庫情報を更新
+        Inventory inventory = inventoryDao.findBySkuId(skuId)
+                .orElseThrow(() -> new ResourceNotFoundException("在庫情報が存在しません: " + skuId));
+        inventory.setQuantity(requestDto.quantity());
+        Inventory updatedInventory = inventoryDao.update(inventory);
+
+        // レスポンス用のSkuDtoを組み立て
+        InventoryDto inventoryDto = new InventoryDto(updatedInventory.getQuantity());
+
+        return new SkuDto(updatedSku.getId(), updatedSku.getSize(), updatedSku.getColor(), updatedSku.getExtraPrice(), inventoryDto);
+    }
+
+    @Transactional(readOnly = true)
+    public SkuDto getSkuDetail(Long skuId) {
+        // 1. SKUを取得
+        Sku sku = skuDao.findById(skuId)
+                .orElseThrow(() -> new ResourceNotFoundException("SKUが存在しません: " + skuId));
+
+        // 2. 在庫情報を取得
+        Inventory inventory = inventoryDao.findBySkuId(skuId)
+                .orElse(new Inventory(null, sku.getId(), 0, null)); // 在庫がない場合は数量0とする
+
+        // 3. レスポンス用のSkuDtoを組み立て
+        InventoryDto inventoryDto = new InventoryDto(inventory.getQuantity());
+        return new SkuDto(sku.getId(), sku.getSize(), sku.getColor(), sku.getExtraPrice(), inventoryDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SkuDto> getSkusByProductId(Long productId) {
+        // 1. 商品が存在するか確認
+        Product product = productDao.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("商品が存在しません: " + productId));
+
+        // 2. 商品に紐づくSKUを取得
+        List<Sku> skus = skuDao.findByProductId(productId);
+        if (skus.isEmpty()) {
+            throw new ResourceNotFoundException("この商品にはSKUが存在しません: " + productId);
+        }
+
+        return buildSkuDtos(skus);
+    }
+
+    @Transactional
+    public void deleteSku(Long skuId) {
+        // 1. SKUを取得
+        Sku sku = skuDao.findById(skuId)
+                .orElseThrow(() -> new ResourceNotFoundException("SKUが存在しません: " + skuId));
+
+        // 2. SKUに紐づく在庫情報を削除
+        inventoryDao.deleteBySkuId(skuId);
+
+        // 3. SKUを削除
+        skuDao.delete(skuId);
+    }
+
 }
