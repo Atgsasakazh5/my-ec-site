@@ -102,7 +102,7 @@ public class CategoryDaoImpl implements CategoryDao {
             return List.of();
         }
         String sql = "SELECT * FROM categories WHERE id IN (:ids)";
-        // NamedParameterJdbcTemplateを使うとIN句を簡単に扱える
+
         Map<String, List<Integer>> params = java.util.Map.of("ids", ids);
         return namedParameterJdbcTemplate.query(sql, params, categoryRowMapper);
     }
