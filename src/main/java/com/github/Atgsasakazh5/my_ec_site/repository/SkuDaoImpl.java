@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +37,10 @@ public class SkuDaoImpl implements SkuDao {
 
     @Override
     public Sku save(Sku sku) {
+        LocalDateTime now = LocalDateTime.now();
+        sku.setCreatedAt(now);
+        sku.setUpdatedAt(now);
+
         String sql = "INSERT INTO skus (product_id, size, color, extra_price, created_at, updated_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
