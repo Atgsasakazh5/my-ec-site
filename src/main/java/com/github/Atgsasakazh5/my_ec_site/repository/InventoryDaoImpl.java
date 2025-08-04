@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +36,9 @@ public class InventoryDaoImpl implements InventoryDao {
 
     @Override
     public Inventory save(Inventory inventory) {
+        var now = LocalDateTime.now();
+        inventory.setUpdatedAt(now);
+
         String sql = "INSERT INTO inventories (sku_id, quantity, updated_at) " +
                 "VALUES (?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();

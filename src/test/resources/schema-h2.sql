@@ -67,7 +67,7 @@ CREATE TABLE skus (
 );
 
 -- inventory テーブル
-CREATE TABLE inventory (
+CREATE TABLE inventories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sku_id INT NOT NULL,
     quantity INT NOT NULL,
