@@ -1,5 +1,6 @@
 package com.github.Atgsasakazh5.my_ec_site.repository;
 
+import com.github.Atgsasakazh5.my_ec_site.entity.Category;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,9 +24,6 @@ class CategoryDaoImplTest {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Autowired
     private CategoryDaoImpl categoryDao;
@@ -164,5 +164,37 @@ class CategoryDaoImplTest {
         var category = categoryDao.findByName("Nonexistent Category");
         // Assert
         assertThat(category).isEmpty();
+    }
+
+    @Test
+    @DisplayName("IDのリストでカテゴリーリストを取得できること")
+    void findByIds_shouldReturnCategories_whenIdsExist() {
+        // Arrange
+        jdbcTemplate.update("INSERT INTO categories (name) VALUES (?);", "CategoryListTest 1");
+        jdbcTemplate.update("INSERT INTO categories (name) VALUES (?);", "CategoryListTest 2");
+        Integer id1 = jdbcTemplate.queryForObject("SELECT id FROM categories WHERE name = ?", Integer.class, "CategoryListTest 1");
+        Integer id2 = jdbcTemplate.queryForObject("SELECT id FROM categories WHERE name = ?", Integer.class, "CategoryListTest 2");
+
+        // Act
+        var categories = categoryDao.findByIds(List.of(id1, id2));
+
+        // Assert
+        assertThat(categories).isNotNull();
+        assertThat(categories.size()).isEqualTo(2);
+
+        //リストからIDだけを取り出し、順序を問わずにid1とid2が含まれていることを確認
+        assertThat(categories)
+                .extracting(Category::getId)
+                .containsExactlyInAnyOrder(id1, id2);
+    }
+
+    @Test
+    @DisplayName("空のIDリストでカテゴリーリストを取得すると空のリストが返ること")
+    void findByIds_shouldReturnEmptyList_whenIdsIsEmpty() {
+        // Act
+        var categories = categoryDao.findByIds(List.of());
+        // Assert
+        assertThat(categories).isNotNull();
+        assertThat(categories).isEmpty();
     }
 }

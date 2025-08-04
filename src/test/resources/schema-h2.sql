@@ -61,8 +61,7 @@ CREATE TABLE skus (
     extra_price DECIMAL(10, 2),
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    FOREIGN KEY (product_id) REFERENCES products(id)
-    RESTRICT,
+    FOREIGN KEY (product_id) REFERENCES products(id),
     -- 複合ユニーク制約
     UNIQUE (product_id, size, color)
 );
@@ -74,5 +73,4 @@ CREATE TABLE inventory (
     quantity INT NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     FOREIGN KEY (sku_id) REFERENCES skus(id)
-    RESTRICT
 );
