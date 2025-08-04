@@ -109,6 +109,15 @@ public class ProductService {
             throw new ResourceNotFoundException("指定されたカテゴリが存在しません: " + requestDto.categoryId());
         }
 
+        long uniqueSkuCount = requestDto.skus().stream()
+                .map(sku -> sku.size() + "::" + sku.color()) // sizeとcolorを組み合わせたキーを作成
+                .distinct()
+                .count();
+
+        if (uniqueSkuCount != requestDto.skus().size()) {
+            throw new IllegalStateException("リクエスト内に重複したSKU（サイズと色の組み合わせ）が含まれています。");
+        }
+
         Product product = new Product();
         product.setName(requestDto.name());
         product.setPrice(requestDto.price());
@@ -139,6 +148,11 @@ public class ProductService {
         // 1. 商品を更新
         Product product = productDao.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("商品が存在しません: " + productId));
+
+        if (categoryDao.findById(requestDto.categoryId()).isEmpty()) {
+            throw new ResourceNotFoundException("指定されたカテゴリが存在しません: " + requestDto.categoryId());
+        }
+
         product.setName(requestDto.name());
         product.setPrice(requestDto.price());
         product.setDescription(requestDto.description());
@@ -170,7 +184,6 @@ public class ProductService {
         List<Long> productIds = products.stream().map(Product::getId).toList();
         List<Integer> categoryIds = products.stream().map(Product::getCategoryId).distinct().toList();
 
-        // SkuDaoにfindAllByProductIds(List<Long> productIds)を追加する必要がある
         Map<Long, List<Sku>> skusByProductId = skuDao.findAllByProductIds(productIds).stream()
                 .collect(Collectors.groupingBy(Sku::getProductId));
 
@@ -182,7 +195,7 @@ public class ProductService {
                 .map(c -> new CategoryDto(c.getId(), c.getName()))
                 .collect(Collectors.toMap(CategoryDto::id, c -> c));
 
-        // 3. メモリ上でデータを結合してDTOを組み立てる（DBアクセスはもう発生しない）
+        // 3. メモリ上でデータを結合してDTOを組み立てる
         return products.stream()
                 .map(product -> {
                     List<Sku> skus = skusByProductId.getOrDefault(product.getId(), List.of());
