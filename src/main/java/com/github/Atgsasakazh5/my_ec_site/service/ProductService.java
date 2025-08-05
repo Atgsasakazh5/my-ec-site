@@ -374,9 +374,6 @@ public class ProductService {
 
         // 2. 商品に紐づくSKUを取得
         List<Sku> skus = skuDao.findByProductId(productId);
-        if (skus.isEmpty()) {
-            throw new ResourceNotFoundException("この商品にはSKUが存在しません: " + productId);
-        }
 
         return buildSkuDtos(skus);
     }
