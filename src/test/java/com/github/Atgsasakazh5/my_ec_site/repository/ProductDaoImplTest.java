@@ -249,4 +249,61 @@ class ProductDaoImplTest {
         // Assert
         assertEquals(100, count);
     }
+
+    @Test
+    @DisplayName("特定のカテゴリの商品を取得できること")
+    void findByCategoryId_shouldReturnProductsForCategory() {
+        // Arrange: batchUpdateで50件のテストデータを一括登録
+        List<Object[]> batchArgs = new ArrayList<>();
+        for (int i = 1; i <= 50; i++) {
+            batchArgs.add(new Object[]{
+                    "テスト商品" + i, 1000 + i, "説明" + i, "url" + i, testCategoryId,
+                    Timestamp.valueOf(LocalDateTime.now()),
+                    Timestamp.valueOf(LocalDateTime.now())
+            });
+        }
+        jdbcTemplate.batchUpdate("INSERT INTO products (name, price, description, image_url, category_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)", batchArgs);
+
+        // Act: 1ページ目を20件取得
+        int page = 0;
+        int size = 20;
+        List<Product> products = productDao.findByCategoryId(testCategoryId, page, size);
+
+        // Assert
+        assertThat(products).hasSize(size);
+        assertThat(products).allMatch(product -> product.getCategoryId().equals(testCategoryId));
+
+        // 商品名のリストを作成
+        List<String> expectedNames = IntStream.rangeClosed(31, 50)
+                .mapToObj(i -> "テスト商品" + i)
+                .sorted(Comparator.reverseOrder()) // 降順にソート
+                .toList();
+
+        // 実際のリストから商品名を抽出
+        List<String> actualNames = products.stream().map(Product::getName).toList();
+
+        // 順序も含めて、期待されるリストと完全に一致することを検証
+        assertThat(actualNames).containsExactlyElementsOf(expectedNames);
+    }
+
+    @Test
+    @DisplayName("特定のカテゴリの商品数を取得できること")
+    void countByCategoryId_shouldReturnCountForCategory() {
+        // Arrange: batchUpdateで50件のテストデータを一括登録
+        List<Object[]> batchArgs = new ArrayList<>();
+        for (int i = 1; i <= 50; i++) {
+            batchArgs.add(new Object[]{
+                    "テスト商品" + i, 1000 + i, "説明" + i, "url" + i, testCategoryId,
+                    Timestamp.valueOf(LocalDateTime.now()),
+                    Timestamp.valueOf(LocalDateTime.now())
+            });
+        }
+        jdbcTemplate.batchUpdate("INSERT INTO products (name, price, description, image_url, category_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)", batchArgs);
+
+        // Act
+        int count = productDao.countByCategoryId(testCategoryId);
+
+        // Assert
+        assertEquals(50, count);
+    }
 }

@@ -12,7 +12,6 @@ import com.github.Atgsasakazh5.my_ec_site.repository.SkuDao;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -389,6 +388,48 @@ public class ProductService {
 
         // 3. SKUを削除
         skuDao.delete(skuId);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponseDto<ProductSummaryDto> searchProductsByCategory(
+            int categoryId, int page, int size) {
+
+        // 許可するページサイズのリストを定義
+        final List<Integer> ALLOWED_PAGE_SIZES = List.of(20, 50, 100);
+        int validatedSize = ALLOWED_PAGE_SIZES.contains(size) ? size : 20;
+
+        // ページ番号がマイナスにならないようにする
+        int validatedPage = Math.max(page, 0);
+
+        // カテゴリIDが存在するか確認
+        var category = categoryDao.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("指定されたカテゴリが存在しません: " + categoryId));
+
+        // DAOを呼び出して、商品リストと総商品数を取得
+        List<Product> products = productDao.findByCategoryId(categoryId, validatedPage, validatedSize);
+        int totalProducts = productDao.countByCategoryId(categoryId);
+
+        // summaryDtoのリストを作成
+        List<ProductSummaryDto> dtos = products.stream()
+                .map(p -> new ProductSummaryDto(
+                        p.getId(),
+                        p.getName(),
+                        p.getPrice(),
+                        p.getDescription(),
+                        p.getImageUrl(),
+                        new CategoryDto(category.getId(), category.getName()),
+                        p.getCreatedAt(),
+                        p.getUpdatedAt()
+                ))
+                .toList();
+
+        //ページネーション情報を含んだレスポンスを組み立てる
+        return new PageResponseDto<>(
+                dtos,
+                validatedPage,
+                validatedSize,
+                totalProducts
+        );
     }
 
 }

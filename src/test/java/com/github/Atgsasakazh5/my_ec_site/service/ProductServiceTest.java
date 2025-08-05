@@ -631,4 +631,51 @@ class ProductServiceTest {
         // 2. Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> productService.deleteSku(skuId));
     }
+
+    @Test
+    @DisplayName("特定のカテゴリの商品をページネーション対応して取得できること-正常系")
+    void findProductsByCategoryIdPaginated_shouldReturnPaginatedProductList_whenCategoryExists(){
+        // 1. Arrange
+        int page = 0;
+        int size = 20;
+        int categoryId = 1;
+        var mockCategory = new Category(categoryId, "トップス");
+        var mockProduct1 = new Product(1L, "Tシャツ", 1000, "説明", "/img.jpg", categoryId, LocalDateTime.now(), LocalDateTime.now());
+        var mockProduct2 = new Product(2L, "ジーンズ", 2000, "説明", "/img.jpg", categoryId, LocalDateTime.now(), LocalDateTime.now());
+        List<Product> productList = List.of(mockProduct1, mockProduct2);
+
+        when(categoryDao.findById(categoryId)).thenReturn(Optional.of(mockCategory));
+        when(productDao.findByCategoryId(categoryId, page, size)).thenReturn(productList);
+        when(productDao.countByCategoryId(categoryId)).thenReturn(2);
+
+        // 2. Act
+        var resultPage = productService.searchProductsByCategory(categoryId, page, size);
+
+        // 3. Assert
+        assertThat(resultPage).isNotNull();
+        assertThat(resultPage.content()).hasSize(2);
+        assertThat(resultPage.totalPages()).isEqualTo(1);
+        assertThat(resultPage.totalElements()).isEqualTo(2);
+        assertThat(resultPage.content().get(0).name()).isEqualTo("Tシャツ");
+        assertThat(resultPage.content().get(0).category().name()).isEqualTo("トップス");
+        assertThat(resultPage.content().get(1).name()).isEqualTo("ジーンズ");
+        assertThat(resultPage.content().get(1).category().name()).isEqualTo("トップス");
+
+    }
+
+    @Test
+    @DisplayName("存在しないカテゴリIDで検索すると404を返すこと-正常系")
+    void findProductsByCategoryIdPaginated_shouldReturn404_whenCategoryDoesNotExist() {
+        // 1. Arrange
+        int page = 0;
+        int size = 20;
+        int categoryId = 999; // 存在しないカテゴリID
+
+        when(categoryDao.findById(categoryId)).thenReturn(Optional.empty());
+
+        // 3. Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            productService.searchProductsByCategory(categoryId, page, size);
+        });
+    }
 }

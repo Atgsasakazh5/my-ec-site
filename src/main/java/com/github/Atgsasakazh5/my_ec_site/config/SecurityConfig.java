@@ -42,8 +42,8 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // HTTPリクエストに対する認可設定
                 .authorizeHttpRequests(auth -> auth
-                        // "/api/auth/**"へのリクエストは全て許可 (認証不要)
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // 認証不要でリクエストを許可するパスを指定
+                        .requestMatchers("/api/auth/**", "/api/products/**", "/api/categories/**").permitAll()
                         // "/api/admin/**"へのリクエストはADMINロールを持つユーザーのみ許可
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // 上記以外のリクエストは全て認証が必要

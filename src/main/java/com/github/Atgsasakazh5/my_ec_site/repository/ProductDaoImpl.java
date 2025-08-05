@@ -106,4 +106,21 @@ public class ProductDaoImpl implements ProductDao {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class);
         return (count != null) ? count : 0;
     }
+
+    @Override
+    public List<Product> findByCategoryId(int categoryId, int page, int size) {
+        String sql = "SELECT * FROM products WHERE category_id = ? ORDER BY id DESC LIMIT ? OFFSET ?";
+        try {
+            return jdbcTemplate.query(sql, productRowMapper, categoryId, size, page * size);
+        } catch (EmptyResultDataAccessException e) {
+            return List.of();
+        }
+    }
+
+    @Override
+    public int countByCategoryId(int categoryId) {
+        String sql = "SELECT COUNT(*) FROM products WHERE category_id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, categoryId);
+        return (count != null) ? count : 0;
+    }
 }

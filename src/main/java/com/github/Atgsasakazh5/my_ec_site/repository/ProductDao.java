@@ -21,4 +21,8 @@ public interface ProductDao {
 
     int countAll();
 
+    List<Product> findByCategoryId(int categoryId, int page, int size);
+
+    int countByCategoryId(int categoryId);
+
 }
