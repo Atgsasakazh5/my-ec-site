@@ -1,12 +1,9 @@
 package com.github.Atgsasakazh5.my_ec_site.dto;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 
 public record ProductUpdateRequestDto(
-        @NotBlank @Max(255) String name,
+        @NotBlank @Size(min = 1, max = 255, message = "商品名は1文字以上255文字以下で入力してください" ) String name,
         @NotNull @PositiveOrZero Integer price,
         @NotBlank String description,
         String imageUrl,

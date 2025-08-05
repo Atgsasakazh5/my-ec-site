@@ -1,8 +1,6 @@
 package com.github.Atgsasakazh5.my_ec_site.controller;
 
-import com.github.Atgsasakazh5.my_ec_site.dto.ProductCreateRequestDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.ProductDetailDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.ProductUpdateRequestDto;
+import com.github.Atgsasakazh5.my_ec_site.dto.*;
 import com.github.Atgsasakazh5.my_ec_site.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -42,5 +40,13 @@ public class AdminProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PostMapping("/{id}/skus")
+    public ResponseEntity<SkuDto> createSku(@PathVariable Long id,
+                                            @Valid @RequestBody SkuCreateRequestDto request) {
+
+        var createdSku = productService.createSku(id, request);
+        return new ResponseEntity<>(createdSku, HttpStatus.CREATED);
     }
 }
