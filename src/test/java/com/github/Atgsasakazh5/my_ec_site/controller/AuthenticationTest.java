@@ -3,6 +3,7 @@ package com.github.Atgsasakazh5.my_ec_site.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.Atgsasakazh5.my_ec_site.dto.JwtAuthenticationResponseDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.LoginRequestDto;
+import com.github.Atgsasakazh5.my_ec_site.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 

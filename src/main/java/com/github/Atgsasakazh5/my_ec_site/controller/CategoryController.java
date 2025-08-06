@@ -34,7 +34,7 @@ public class CategoryController {
             @PathVariable int categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        PageResponseDto<ProductSummaryDto> products = productService.searchProductsByCategory(categoryId, size, page);
+        PageResponseDto<ProductSummaryDto> products = productService.searchProductsByCategory(categoryId, page, size);
         return ResponseEntity.ok(products);
     }
 

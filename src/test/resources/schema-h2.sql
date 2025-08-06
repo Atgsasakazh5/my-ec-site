@@ -2,6 +2,10 @@
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS inventories;
+DROP TABLE IF EXISTS skus;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS categories;
 
 
 -- roles テーブル
@@ -69,7 +73,7 @@ CREATE TABLE skus (
 -- inventory テーブル
 CREATE TABLE inventories (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    sku_id INT NOT NULL,
+    sku_id INT NOT NULL UNIQUE,
     quantity INT NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     FOREIGN KEY (sku_id) REFERENCES skus(id)

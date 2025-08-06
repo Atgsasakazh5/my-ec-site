@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-//@ActiveProfiles("h2")
+@ActiveProfiles("h2")
 class AuthControllerTest {
 
     @Autowired
