@@ -5,6 +5,7 @@ import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.Role;
 import com.github.Atgsasakazh5.my_ec_site.entity.RoleName;
 import com.github.Atgsasakazh5.my_ec_site.entity.User;
+import com.github.Atgsasakazh5.my_ec_site.repository.CartDao;
 import com.github.Atgsasakazh5.my_ec_site.repository.RoleRepository;
 import com.github.Atgsasakazh5.my_ec_site.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -26,7 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-@ActiveProfiles("test")
+@ActiveProfiles("h2")
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
@@ -41,6 +42,9 @@ class UserServiceTest {
 
     @Mock
     private RoleRepository roleRepository;
+
+    @Mock
+    private CartDao cartDao;
 
     @Test
     @DisplayName("ユーザー登録のテスト-正常系")
@@ -76,6 +80,9 @@ class UserServiceTest {
         // userRepository.save()が1回呼ばれたことを確認
         ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userArgumentCaptor.capture());
+
+        // cartDao.saveCart()が1回呼ばれたことを確認
+        verify(cartDao).saveCart(1L);
 
         // saveに渡されたUserオブジェクトを検証
         User savedUser = userArgumentCaptor.getValue();

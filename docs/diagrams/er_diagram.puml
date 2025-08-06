@@ -156,11 +156,8 @@ categories ||--o{products
 ' 注文と注文明細 1対多
 orders ||--o{order_details
 
-' 商品と注文明細 1対多
-products ||--o{order_details
-
-' 商品と在庫は1対1
-products ||--|| inventories
+' SKUと注文明細 1対多
+skus ||--o{order_details
 
 ' 商品とSKUは1対多
 products ||--o{skus
@@ -171,7 +168,7 @@ skus ||--|| inventories
 ' カート機能のリレーション
 users ||--|| carts
 carts ||--o{cart_items
-products ||--o{cart_items
+skus ||--o{cart_items
 
 'ユーザーロールのリレーション
 users ||--o{user_roles

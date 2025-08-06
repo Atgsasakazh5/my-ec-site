@@ -2,8 +2,10 @@ package com.github.Atgsasakazh5.my_ec_site.service;
 
 import com.github.Atgsasakazh5.my_ec_site.dto.SignUpRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
+import com.github.Atgsasakazh5.my_ec_site.entity.Cart;
 import com.github.Atgsasakazh5.my_ec_site.entity.RoleName;
 import com.github.Atgsasakazh5.my_ec_site.entity.User;
+import com.github.Atgsasakazh5.my_ec_site.repository.CartDao;
 import com.github.Atgsasakazh5.my_ec_site.repository.RoleRepository;
 import com.github.Atgsasakazh5.my_ec_site.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,11 +20,13 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final CartDao cartDao;
 
-    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository, RoleRepository roleRepository) {
+    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository, RoleRepository roleRepository, CartDao cartDao) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.cartDao = cartDao;
     }
 
     @Transactional
@@ -49,6 +53,8 @@ public class UserService {
         user.setRoles(Set.of(role)); // ユーザーにロールを追加
 
         User savedUser = userRepository.save(user);
+        cartDao.saveCart(savedUser.getId());
+
         return new UserDto(savedUser.getId(),
                            savedUser.getName(),
                            savedUser.getEmail());

@@ -78,3 +78,21 @@ CREATE TABLE inventories (
     updated_at TIMESTAMP NOT NULL,
     FOREIGN KEY (sku_id) REFERENCES skus(id)
 );
+
+-- cart テーブル
+CREATE TABLE carts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+)
+
+-- cart_items テーブル
+CREATE TABLE cart_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    cart_id BIGINT NOT NULL,
+    sku_id BIGINT NOT NULL,
+    quantity INT NOT NULL,
+    FOREIGN KEY (cart_id) REFERENCES carts(id),
+    FOREIGN KEY (sku_id) REFERENCES skus(id),
+    UNIQUE (cart_id, sku_id)
+);
