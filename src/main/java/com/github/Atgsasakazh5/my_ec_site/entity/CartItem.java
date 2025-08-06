@@ -12,7 +12,7 @@ public class CartItem {
 
     private Long id;
     private Long cartId; // 外部キー
-    private Long stockId; // 外部キー
+    private Long skuId; // 外部キー
     private Integer quantity; // 数量
-    
+
 }
