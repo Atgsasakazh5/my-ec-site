@@ -88,7 +88,7 @@ public class CartItemDaoImpl implements CartItemDao {
     @Override
     public List<CartItemDto> findDetailedItemsByCartId(Long cartId) {
         String sql = """
-                    SELECT
+                SELECT
                     ci.id AS cart_item_id,
                     p.name AS product_name,
                     p.image_url,

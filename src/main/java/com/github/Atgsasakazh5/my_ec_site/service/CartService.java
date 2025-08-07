@@ -52,6 +52,16 @@ public class CartService {
         return new CartDetailDto(cartId, cartItems, totalPrice);
     }
 
+    @Transactional(readOnly = true)
+    public CartDetailDto getCartDetail(String email) {
+        // 1. メールアドレスからカートを取得
+        Cart cart = cartDao.findCartByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("カートが見つかりません: " + email));
+
+        // 2. 既存のメソッドに処理を委譲
+        return getCartDetail(cart.getId());
+    }
+
     @Transactional
     public CartDetailDto addItemToCart(String email, AddCartItemRequestDto requestDto) {
         // SKUの存在チェック

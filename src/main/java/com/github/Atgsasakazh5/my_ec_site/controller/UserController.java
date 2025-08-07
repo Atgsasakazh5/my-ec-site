@@ -18,7 +18,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    // ユーザー関連のエンドポイントをここに追加
     @GetMapping("/me")
     public ResponseEntity<UserDto> getCurrentUser(Authentication authentication) {
         // 現在のユーザー情報を取得

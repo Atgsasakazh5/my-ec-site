@@ -50,7 +50,7 @@ public class UserService {
         user.setPassword(hashedPassword);
         user.setAddress(signUpRequestDto.address());
         user.setSubscribingNewsletter(signUpRequestDto.subscribingNewsletter());
-        user.setRoles(Set.of(role)); // ユーザーにロールを追加
+        user.setRoles(Set.of(role));
 
         User savedUser = userRepository.save(user);
         cartDao.saveCart(savedUser.getId());

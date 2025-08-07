@@ -6,6 +6,8 @@ DROP TABLE IF EXISTS inventories;
 DROP TABLE IF EXISTS skus;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS cart_items;
+DROP TABLE IF EXISTS carts;
 
 
 -- roles テーブル
@@ -84,7 +86,7 @@ CREATE TABLE carts (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL UNIQUE,
     FOREIGN KEY (user_id) REFERENCES users(id)
-)
+);
 
 -- cart_items テーブル
 CREATE TABLE cart_items (
