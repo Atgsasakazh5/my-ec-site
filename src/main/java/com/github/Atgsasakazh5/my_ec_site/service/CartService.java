@@ -2,7 +2,6 @@ package com.github.Atgsasakazh5.my_ec_site.service;
 
 import com.github.Atgsasakazh5.my_ec_site.dto.AddCartItemRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.CartDetailDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.CartItemDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.Cart;
 import com.github.Atgsasakazh5.my_ec_site.entity.CartItem;
 import com.github.Atgsasakazh5.my_ec_site.entity.Inventory;
@@ -15,7 +14,6 @@ import com.github.Atgsasakazh5.my_ec_site.repository.SkuDao;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.module.ResolutionException;
 import java.util.List;
 
 @Service
@@ -54,11 +52,10 @@ public class CartService {
 
     @Transactional(readOnly = true)
     public CartDetailDto getCartDetail(String email) {
-        // 1. メールアドレスからカートを取得
+        // メールアドレスからカートを取得
         Cart cart = cartDao.findCartByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("カートが見つかりません: " + email));
 
-        // 2. 既存のメソッドに処理を委譲
         return getCartDetail(cart.getId());
     }
 
@@ -70,9 +67,9 @@ public class CartService {
 
         // 在庫情報を取得
         Inventory inventory = inventoryDao.findBySkuId(sku.getId())
-                .orElseThrow(() -> new IllegalStateException("在庫情報が見つかりません: SKU ID " + sku.getId()));
+                .orElseThrow(() -> new ResourceNotFoundException("在庫情報が見つかりません: SKU ID " + sku.getId()));
 
-        // カートを取得（.get()を回避）
+        // カートを取得
         Cart cart = cartDao.findCartByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("カートが見つかりません: " + email));
 
