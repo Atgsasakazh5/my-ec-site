@@ -22,7 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -116,5 +118,32 @@ class CartControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("認証済みユーザーがカートの詳細を取得できること")
+    @WithMockUser(username = "test@email.com", roles = "USER")
+    void getCartDetail_shouldSucceed_whenUserIsAuthenticated() throws Exception {
+        // Arrange
+        when(cartService.getCartDetail(anyString()))
+                .thenReturn(new CartDetailDto(1L, List.of(), 0));
+
+        // Act & Assert
+        mockMvc.perform(get("/api/cart")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cartId").value(1L))
+                .andExpect(jsonPath("$.totalPrice").value(0))
+                .andExpect(jsonPath("$.cartItems").isEmpty());
+
+    }
+
+    @Test
+    @DisplayName("認証されていないユーザーがカートの詳細を取得しようとすると403エラーが返ること")
+    void getCartDetail_shouldReturnUnauthorized_whenUserIsNotAuthenticated() throws Exception {
+        // Act & Assert
+        mockMvc.perform(get("/api/cart")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
     }
 }

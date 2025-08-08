@@ -2,6 +2,7 @@ package com.github.Atgsasakazh5.my_ec_site.service;
 
 import com.github.Atgsasakazh5.my_ec_site.dto.AddCartItemRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.CartDetailDto;
+import com.github.Atgsasakazh5.my_ec_site.dto.UpdateCartItemRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.Cart;
 import com.github.Atgsasakazh5.my_ec_site.entity.CartItem;
 import com.github.Atgsasakazh5.my_ec_site.entity.Inventory;
@@ -104,4 +105,59 @@ public class CartService {
         // カート詳細を返す
         return getCartDetail(cart.getId());
     }
+
+    @Transactional
+    public CartDetailDto updateCartItemQuantity(String email, Long cartItemId, UpdateCartItemRequestDto request) {
+        // メールアドレスからカートを取得
+        Cart cart = cartDao.findCartByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("カートが見つかりません: " + email));
+
+        // カートアイテムを取得
+        CartItem cartItem = cartItemDao.findById(cartItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("カートアイテムが見つかりません: カートID " + cartItemId));
+
+        // カートが一致するか確認
+        if (!cartItem.getCartId().equals(cart.getId())) {
+            throw new SecurityException("他人のカートアイテムを操作する権限がありません。");
+        }
+
+        // 在庫情報を取得
+        Inventory inventory = inventoryDao.findBySkuId(cartItem.getSkuId())
+                .orElseThrow(() -> new ResourceNotFoundException("在庫情報が見つかりません: SKU ID " + cartItem.getSkuId()));
+
+        // 要求数量を取得
+        int requiredQty = request.quantity();
+
+        // 在庫チェック
+        if (inventory.getQuantity() < requiredQty) {
+            throw new IllegalStateException("在庫が不足しています。");
+        }
+
+        // 数量を更新
+        cartItem.setQuantity(requiredQty);
+        cartItemDao.update(cartItem);
+
+        // カート詳細を返す
+        return getCartDetail(cart.getId());
+    }
+
+    @Transactional
+    public void deleteItemFromCart(String email, Long cartItemId) {
+        // メールアドレスからカートを取得
+        Cart cart = cartDao.findCartByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("カートが見つかりません: " + email));
+
+        // カートアイテムを取得
+        CartItem cartItem = cartItemDao.findById(cartItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("カートアイテムが見つかりません: カートID " + cartItemId));
+
+        // カートが一致するか確認
+        if (!cartItem.getCartId().equals(cart.getId())) {
+            throw new SecurityException("他人のカートアイテムを操作する権限がありません。");
+        }
+
+        // カートアイテムを削除
+        cartItemDao.deleteById(cartItemId);
+    }
+
 }
