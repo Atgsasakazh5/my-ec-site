@@ -245,12 +245,12 @@ class CartServiceTest {
 
         // Assert
         ArgumentCaptor<CartItem> captor = ArgumentCaptor.forClass(CartItem.class);
-        verify(cartItemDao, times(1)).update(any(CartItem.class));
-        assertNotNull(result);
-        assertEquals(1L, result.cartId());
-        assertEquals(1, result.cartItems().size());
-        assertEquals(3, result.cartItems().get(0).quantity());
-        assertEquals(3300, result.totalPrice());
+        verify(cartItemDao).update(captor.capture());
+        assertThat(captor.getValue().getQuantity()).isEqualTo(3);
+
+        // 返されたDTOの検証
+        assertThat(result.totalPrice()).isEqualTo(3300);
+        assertThat(result.cartItems().get(0).quantity()).isEqualTo(3);
 
     }
 
@@ -272,7 +272,7 @@ class CartServiceTest {
     }
 
     @Test
-    @DisplayName("カートアイテムの数量を更新しようとしたが、在庫が不足している場合は例外をスローすること-異常系")
+    @DisplayName("カートアイテムの数量更新リクエストよりも在庫が不足している場合は例外をスローすること-異常系")
     void updateCartItemQuantity_shouldThrowException_whenInventoryIsInsufficient() {
         // Arrange
         String email = "test@email.com";
@@ -288,6 +288,58 @@ class CartServiceTest {
         // Act & Assert
         assertThrows(IllegalStateException.class, () -> {
             cartService.updateCartItemQuantity(email, cartItemId, request);
+        });
+    }
+
+    @Test
+    @DisplayName("アイテムをカートから削除できること")
+    void deleteItemFromCart_shouldSucceed_whenItemExists() {
+        // Arrange
+        String email = "test@email.com";
+        Long cartItemId = 1L;
+        var existingItem = new CartItem(1L, 1L, 1L, 2);
+
+        when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(new Cart(1L, 1L)));
+        when(cartItemDao.findById(cartItemId)).thenReturn(Optional.of(existingItem));
+
+        // Act
+        cartService.deleteItemFromCart(email, cartItemId);
+
+        // Assert
+        ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
+        verify(cartItemDao).deleteById(captor.capture());
+        assertThat(captor.getValue()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("不正なCartItemIDで削除ができないこと")
+    void deleteFromCart_sholdThrowException_whenCartItemDoesNotBelongToUser() {
+        // Arrange
+        String email = "test@email.com";
+        Long cartItemId = 1L;
+
+        when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(new Cart(1L, 1L)));
+        when(cartItemDao.findById(cartItemId)).thenReturn(Optional.of(new CartItem(1L, 100L, 1L, 2)));
+
+        // Act & Assert
+        assertThrows(SecurityException.class, () -> {
+            cartService.deleteItemFromCart(email, cartItemId);
+        });
+    }
+
+    @Test
+    @DisplayName("存在しないCartItemIDでResorceNotFoundExceptionがスローされること")
+    void deleteFromCart_shuldThrowException_whenCartItemIdNotExist() {
+        // Arrange
+        String email = "test@email.com";
+        Long cartItemId = 1L;
+
+        when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(new Cart(1L, 1L)));
+        when(cartItemDao.findById(cartItemId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            cartService.deleteItemFromCart(email, cartItemId);
         });
     }
 }
