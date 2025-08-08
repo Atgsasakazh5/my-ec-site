@@ -2,6 +2,7 @@ package com.github.Atgsasakazh5.my_ec_site.service;
 
 import com.github.Atgsasakazh5.my_ec_site.dto.AddCartItemRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.CartItemDto;
+import com.github.Atgsasakazh5.my_ec_site.dto.UpdateCartItemRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.Cart;
 import com.github.Atgsasakazh5.my_ec_site.entity.CartItem;
 import com.github.Atgsasakazh5.my_ec_site.entity.Inventory;
@@ -14,6 +15,7 @@ import com.github.Atgsasakazh5.my_ec_site.repository.SkuDao;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -218,6 +220,74 @@ class CartServiceTest {
         // Act & Assert
         assertThrows(IllegalStateException.class, () -> {
             cartService.addItemToCart(email, requestDto);
+        });
+    }
+
+    @Test
+    @DisplayName("カートアイテムの数量を更新できること-正常系")
+    void updateCartItemQuantity_shouldUpdateQuantity_whenItemExists() {
+        // Arrange
+        String email = "test@email.com";
+        Long cartItemId = 1L;
+        var request = new UpdateCartItemRequestDto(3);
+        var existingItem = new CartItem(1L, 1L, 1L, 2);
+
+        when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(new Cart(1L, 1L)));
+        when(cartItemDao.findById(cartItemId)).thenReturn(Optional.of(existingItem));
+        when(inventoryDao.findBySkuId(existingItem.getSkuId()))
+                .thenReturn(Optional.of(new Inventory(1L, existingItem.getSkuId(), 10, null)));
+
+        var finalCartItems = List.of(new CartItemDto(1L, "Test Item", null, 1L, "M", "Red", 1100, 3));
+        when(cartItemDao.findDetailedItemsByCartId(1L)).thenReturn(finalCartItems);
+
+        // Act
+        var result = cartService.updateCartItemQuantity(email, cartItemId, request);
+
+        // Assert
+        ArgumentCaptor<CartItem> captor = ArgumentCaptor.forClass(CartItem.class);
+        verify(cartItemDao, times(1)).update(any(CartItem.class));
+        assertNotNull(result);
+        assertEquals(1L, result.cartId());
+        assertEquals(1, result.cartItems().size());
+        assertEquals(3, result.cartItems().get(0).quantity());
+        assertEquals(3300, result.totalPrice());
+
+    }
+
+    @Test
+    @DisplayName("ユーザーのカートと異なるカートアイテムを更新しようとすると例外がスローされること-異常系")
+    void updateCartItemQuantity_shouldThrowException_whenCartItemDoesNotBelongToUser() {
+        // Arrange
+        String email = "test@email.com";
+        Long cartItemId = 1L;
+        var request = new UpdateCartItemRequestDto(3);
+
+        when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(new Cart(1L, 1L)));
+        when(cartItemDao.findById(cartItemId)).thenReturn(Optional.of(new CartItem(1L, 100L, 1L, 2)));
+
+        // Act & Assert
+        assertThrows(SecurityException.class, () -> {
+            cartService.updateCartItemQuantity(email, cartItemId, request);
+        });
+    }
+
+    @Test
+    @DisplayName("カートアイテムの数量を更新しようとしたが、在庫が不足している場合は例外をスローすること-異常系")
+    void updateCartItemQuantity_shouldThrowException_whenInventoryIsInsufficient() {
+        // Arrange
+        String email = "test@email.com";
+        Long cartItemId = 1L;
+        var request = new UpdateCartItemRequestDto(5);
+        var existingItem = new CartItem(1L, 1L, 1L, 2);
+
+        when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(new Cart(1L, 1L)));
+        when(cartItemDao.findById(cartItemId)).thenReturn(Optional.of(existingItem));
+        when(inventoryDao.findBySkuId(existingItem.getSkuId()))
+                .thenReturn(Optional.of(new Inventory(1L, existingItem.getSkuId(), 3, null)));
+
+        // Act & Assert
+        assertThrows(IllegalStateException.class, () -> {
+            cartService.updateCartItemQuantity(email, cartItemId, request);
         });
     }
 }
