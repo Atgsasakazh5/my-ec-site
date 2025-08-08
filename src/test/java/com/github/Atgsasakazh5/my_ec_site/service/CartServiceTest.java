@@ -184,7 +184,40 @@ class CartServiceTest {
 
         // Assert
         verify(cartItemDao, times(1)).update(any(CartItem.class));
-        assertThat(result.totalPrice()).isEqualTo(5500); // 1100 * 5
+        assertThat(result.totalPrice()).isEqualTo(5500);
         assertThat(result.cartItems().get(0).quantity()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("カートにSKUを追加する際、存在しないSKUIDの場合は例外をスローすること-異常系")
+    void addItemToCart_shouldThrowException_whenSkuDoesNotExist() {
+        // Arrange
+        String email = "";
+        var requestDto = new AddCartItemRequestDto(999L, 1);
+        when(skuDao.findById(anyLong())).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            cartService.addItemToCart(email, requestDto);
+        });
+    }
+
+    @Test
+    @DisplayName("カートにSKUを追加する際、在庫が不足している場合は例外をスローすること-異常系")
+    void addItemToCart_shouldThrowException_whenInventoryIsInsufficient() {
+        // Arrange
+        String email = "test@email.com";
+        var requestDto = new AddCartItemRequestDto(1L, 5);
+
+        when(skuDao.findById(1L)).thenReturn(Optional.of(new Sku(1L, 1L, "M", "Red", 100, null, null)));
+        when(inventoryDao.findBySkuId(1L)).thenReturn(Optional.of(new Inventory(1L, 1L, 3, null)));
+        when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(new Cart(1L, 1L)));
+
+        when(cartItemDao.findByCartIdAndSkuId(1L, 1L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(IllegalStateException.class, () -> {
+            cartService.addItemToCart(email, requestDto);
+        });
     }
 }
