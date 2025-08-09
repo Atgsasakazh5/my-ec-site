@@ -1,6 +1,8 @@
 -- 既存のテーブルがあれば削除
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS cart_items;
+DROP TABLE IF EXISTS carts;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS inventories;
 DROP TABLE IF EXISTS skus;
@@ -31,8 +33,8 @@ CREATE TABLE user_roles (
     user_id BIGINT NOT NULL,
     role_id INT NOT NULL,
     PRIMARY KEY (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (role_id) REFERENCES roles(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
 -- categories テーブル
@@ -51,12 +53,12 @@ CREATE TABLE products (
     category_id INT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    FOREIGN KEY (category_id) REFERENCES categories(id)
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 );
 
 -- skus テーブル
 CREATE TABLE skus (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     product_id INT NOT NULL,
     -- size と color の組み合わせでユニーク制約を設定
     -- nullだとユニーク制約が適用されないため、デフォルト値を設定
@@ -65,7 +67,7 @@ CREATE TABLE skus (
     extra_price DECIMAL(10, 2),
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     -- 複合ユニーク制約
     UNIQUE (product_id, size, color)
 );
@@ -73,8 +75,26 @@ CREATE TABLE skus (
 -- inventory テーブル
 CREATE TABLE inventories (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    sku_id INT NOT NULL UNIQUE,
+    sku_id BIGINT NOT NULL UNIQUE,
     quantity INT NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    FOREIGN KEY (sku_id) REFERENCES skus(id)
+    FOREIGN KEY (sku_id) REFERENCES skus(id) ON DELETE CASCADE
+);
+
+-- cart テーブル
+CREATE TABLE carts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- cart_items テーブル
+CREATE TABLE cart_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    cart_id BIGINT NOT NULL,
+    sku_id BIGINT NOT NULL,
+    quantity INT NOT NULL,
+    FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE,
+    FOREIGN KEY (sku_id) REFERENCES skus(id) ON DELETE CASCADE,
+    UNIQUE (cart_id, sku_id)
 );

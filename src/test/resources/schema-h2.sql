@@ -1,13 +1,13 @@
 -- 既存のテーブルがあれば削除
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS cart_items;
+DROP TABLE IF EXISTS carts;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS inventories;
 DROP TABLE IF EXISTS skus;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS cart_items;
-DROP TABLE IF EXISTS carts;
 
 
 -- roles テーブル
@@ -58,7 +58,7 @@ CREATE TABLE products (
 
 -- skus テーブル
 CREATE TABLE skus (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     product_id INT NOT NULL,
     -- size と color の組み合わせでユニーク制約を設定
     -- nullだとユニーク制約が適用されないため、デフォルト値を設定

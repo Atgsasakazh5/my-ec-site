@@ -43,4 +43,12 @@ public class GlobalExceptionHandler {
         ApiResponse response = new ApiResponse(false, e.getMessage());
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ApiResponse> handleSecurityException(SecurityException e) {
+        return new ResponseEntity<>(
+                new ApiResponse(false, e.getMessage()),
+                HttpStatus.FORBIDDEN
+        );
+    }
 }
