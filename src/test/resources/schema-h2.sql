@@ -98,3 +98,25 @@ CREATE TABLE cart_items (
     FOREIGN KEY (sku_id) REFERENCES skus(id),
     UNIQUE (cart_id, sku_id)
 );
+
+CREATE TABLE orders (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    total_price INT NOT NULL,
+    shipping_address VARCHAR(255) NOT NULL,
+    shipping_postal_code VARCHAR(10) NOT NULL,
+    shipping_name VARCHAR(255) NOT NULL,
+    ordered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE order_details (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT NOT NULL,
+    sku_id BIGINT NOT NULL,
+    quantity INT NOT NULL,
+    price_at_order INT NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (sku_id) REFERENCES skus(id)
+);

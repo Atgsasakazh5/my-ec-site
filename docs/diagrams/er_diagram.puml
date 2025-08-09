@@ -51,9 +51,7 @@ entity "orders" {
     * shipping_address : VARCHAR(255)
     * shipping_postal_code : VARCHAR(10)
     * shipping_name : VARCHAR(255)
-    ' ---
     * ordered_at : TIMESTAMP
-    * created_at : TIMESTAMP
 }
 
 ' 注文明細テーブル（中間テーブル）
