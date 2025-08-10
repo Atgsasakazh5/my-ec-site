@@ -2,6 +2,7 @@ package com.github.Atgsasakazh5.my_ec_site.service;
 
 import com.github.Atgsasakazh5.my_ec_site.dto.AddCartItemRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.CartDetailDto;
+import com.github.Atgsasakazh5.my_ec_site.dto.CartItemDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.UpdateCartItemRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.Cart;
 import com.github.Atgsasakazh5.my_ec_site.entity.CartItem;
@@ -158,6 +159,23 @@ public class CartService {
 
         // カートアイテムを削除
         cartItemDao.deleteById(cartItemId);
+    }
+
+    @Transactional(readOnly = true)
+    public void validateCartInventory(String email) {
+        Cart cart = cartDao.findCartByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("カートが見つかりません: " + email));
+
+        List<CartItemDto> cartItems = cartItemDao.findDetailedItemsByCartId(cart.getId());
+
+        for (CartItemDto item : cartItems) {
+            Inventory inventory = inventoryDao.findBySkuId(item.getSkuId())
+                    .orElseThrow(() -> new ResourceNotFoundException("在庫情報が見つかりません: SKU ID " + item.getSkuId()));
+
+            if (inventory.getQuantity() < item.getQuantity()) {
+                throw new IllegalStateException("在庫が不足しています: SKU ID " + item.getSkuId());
+            }
+        }
     }
 
 }
