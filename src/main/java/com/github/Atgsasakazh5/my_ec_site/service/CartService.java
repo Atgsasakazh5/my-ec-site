@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CartService {
@@ -161,19 +163,39 @@ public class CartService {
         cartItemDao.deleteById(cartItemId);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
+    public void deleteAllItems(Long cartId) {
+        // カートアイテムを全て削除
+        cartItemDao.deleteByCartId(cartId);
+    }
+
+    @Transactional
     public void validateCartInventory(String email) {
         Cart cart = cartDao.findCartByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("カートが見つかりません: " + email));
 
-        List<CartItemDto> cartItems = cartItemDao.findDetailedItemsByCartId(cart.getId());
+        // ロックなしでカートアイテムの詳細を取得
+        List<CartItemDto> detailedItems = cartItemDao.findDetailedItemsByCartId(cart.getId());
 
-        for (CartItemDto item : cartItems) {
-            Inventory inventory = inventoryDao.findBySkuId(item.getSkuId())
-                    .orElseThrow(() -> new ResourceNotFoundException("在庫情報が見つかりません: SKU ID " + item.getSkuId()));
+        if (detailedItems.isEmpty()) {
+            return;
+        }
 
-            if (inventory.getQuantity() < item.getQuantity()) {
-                throw new IllegalStateException("在庫が不足しています: SKU ID " + item.getSkuId());
+        // 対象のSKU IDリストを作成
+        List<Long> skuIds = detailedItems.stream()
+                .map(CartItemDto::skuId)
+                .toList();
+
+        // 在庫レコードをロックして最新の在庫情報を取得
+        Map<Long, Inventory> lockedInventories = inventoryDao.findBySkuIdsWithLock(skuIds).stream()
+                .collect(Collectors.toMap(Inventory::getSkuId, inventory -> inventory));
+
+        // ロックした最新の在庫情報とカートの数量を比較
+        for (CartItemDto item : detailedItems) {
+            Inventory inventory = lockedInventories.get(item.skuId());
+
+            if (inventory == null || inventory.getQuantity() < item.quantity()) {
+                throw new IllegalStateException("在庫が不足しています: 商品 " + item.productName());
             }
         }
     }

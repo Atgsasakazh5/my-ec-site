@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,10 +56,35 @@ public class InventoryDaoImpl implements InventoryDao {
 
     @Override
     public Inventory update(Inventory inventory) {
+        var now = LocalDateTime.now();
+        inventory.setUpdatedAt(now);
         String sql = "UPDATE inventories SET sku_id = ?, quantity = ?, updated_at = ? WHERE id = ?";
         jdbcTemplate.update(sql, inventory.getSkuId(), inventory.getQuantity(),
                 Timestamp.valueOf(inventory.getUpdatedAt()), inventory.getId());
         return inventory;
+    }
+
+    @Override
+    public void updateAll(List<Inventory> inventories) {
+        if (inventories == null || inventories.isEmpty()) {
+            return;
+        }
+
+        String sql = "UPDATE inventories SET quantity = :quantity, updated_at = :updatedAt WHERE sku_id = :skuId";
+
+        // 各Inventoryオブジェクトを、SQLのパラメータ名にマッピングしたMapのリストに変換
+        List<Map<String, Object>> batchValues = inventories.stream()
+                .map(inventory -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("quantity", inventory.getQuantity());
+
+                    map.put("updatedAt", Timestamp.valueOf(LocalDateTime.now()));
+                    map.put("skuId", inventory.getSkuId());
+                    return map;
+                })
+                .toList();
+
+        namedParameterJdbcTemplate.batchUpdate(sql, batchValues.toArray(new Map[0]));
     }
 
     @Override
@@ -107,6 +133,19 @@ public class InventoryDaoImpl implements InventoryDao {
         String sql = "SELECT * FROM inventories WHERE sku_id IN (:skuIds)";
         // NamedParameterJdbcTemplateを使うとIN句を簡単に扱える
         Map<String, List<Long>> params = Map.of("skuIds", skuIds);
+        return namedParameterJdbcTemplate.query(sql, params, inventoryRowMapper);
+    }
+
+    @Override
+    public List<Inventory> findBySkuIdsWithLock(List<Long> skuIds) {
+        if (skuIds == null || skuIds.isEmpty()) {
+            return List.of();
+        }
+
+        String sql = "SELECT * FROM inventories WHERE sku_id IN (:skuIds) FOR UPDATE";
+
+        Map<String, List<Long>> params = Map.of("skuIds", skuIds);
+
         return namedParameterJdbcTemplate.query(sql, params, inventoryRowMapper);
     }
 }

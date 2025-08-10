@@ -96,6 +96,42 @@ class InventoryDaoImplTest {
     }
 
     @Test
+    @DisplayName("在庫リストを一括で更新できること")
+    void updateAll_shouldUpdateInventoriesInBatch() {
+        // 1. Arrange (準備)
+        // 初期在庫を登録
+        jdbcTemplate.update("INSERT INTO inventories (sku_id, quantity, updated_at) VALUES (?, ?, ?)", testSkuId, 10, LocalDateTime.now());
+        jdbcTemplate.update("INSERT INTO inventories (sku_id, quantity, updated_at) VALUES (?, ?, ?)", testSkuId2, 20, LocalDateTime.now());
+
+        // 更新内容を定義
+        var inventoryToUpdate1 = new Inventory(null, testSkuId, 5, null);
+        var inventoryToUpdate2 = new Inventory(null, testSkuId2, 15, null);
+        List<Inventory> inventoriesToUpdate = List.of(inventoryToUpdate1, inventoryToUpdate2);
+
+        // 2. Act (実行)
+        inventoryDao.updateAll(inventoriesToUpdate);
+
+        // 3. Assert (検証)
+        // DBから直接値を取得して、更新されていることを確認
+        Integer quantity1 = jdbcTemplate.queryForObject("SELECT quantity FROM inventories WHERE sku_id = ?", Integer.class, testSkuId);
+        Integer quantity2 = jdbcTemplate.queryForObject("SELECT quantity FROM inventories WHERE sku_id = ?", Integer.class, testSkuId2);
+
+        assertThat(quantity1).isEqualTo(5);
+        assertThat(quantity2).isEqualTo(15);
+    }
+
+    @Test
+    @DisplayName("空のリストを渡した場合、何も起こらないこと")
+    void updateAll_shouldDoNothing_whenListIsEmpty() {
+        // Arrange
+        List<Inventory> emptyList = List.of();
+
+        // Act & Assert
+        // 例外が発生しないことを確認
+        assertDoesNotThrow(() -> inventoryDao.updateAll(emptyList));
+    }
+
+    @Test
     @DisplayName("SKU IDで在庫を検索できること")
     void findBySkuId_shouldReturnInventory() {
         // Arrange

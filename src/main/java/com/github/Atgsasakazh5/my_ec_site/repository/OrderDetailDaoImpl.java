@@ -1,5 +1,6 @@
 package com.github.Atgsasakazh5.my_ec_site.repository;
 
+import com.github.Atgsasakazh5.my_ec_site.dto.OrderDetailDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.OrderDetail;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -43,9 +44,28 @@ public class OrderDetailDaoImpl implements OrderDetailDao {
     }
 
     @Override
-    public List<OrderDetail> findByOrderId(Long orderId) {
-        String sql = "SELECT * FROM order_details WHERE order_id = :orderId";
-        Map<String, Object> params = Map.of("orderId", orderId);
-        return namedParameterJdbcTemplate.query(sql, params, orderDetailRowMapper);
+    public List<OrderDetailDto> findByOrderId(Long orderId) {
+        String sql = "SELECT od.id, od.sku_id, p.name AS product_name, " +
+                "s.size, s.color, p.image_url, od.price_at_order, od.quantity " +
+                "FROM order_details od " +
+                "JOIN skus s ON od.sku_id = s.id " +
+                "JOIN products p ON s.product_id = p.id " +
+                "WHERE od.order_id = :orderId";
+
+        Map<String, Long> params = new HashMap<>();
+        params.put("orderId", orderId);
+
+        return namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) ->
+                new OrderDetailDto(
+                        rs.getLong("id"),
+                        rs.getLong("sku_id"),
+                        rs.getString("product_name"),
+                        rs.getString("size"),
+                        rs.getString("color"),
+                        rs.getString("image_url"),
+                        rs.getInt("price_at_order"),
+                        rs.getInt("quantity")
+                ));
+
     }
 }

@@ -11,6 +11,8 @@ public interface InventoryDao {
 
     Inventory update(Inventory inventory);
 
+    void updateAll(List<Inventory> inventories);
+
     Optional<Inventory> findBySkuId(Long skuId);
 
     Optional<Inventory> findById(Long id);
@@ -21,4 +23,6 @@ public interface InventoryDao {
 
     // 複数のSKU IDに対応する在庫を一括で取得する
     List<Inventory> findBySkuIdIn(List<Long> skuIds);
+
+    List<Inventory> findBySkuIdsWithLock(List<Long> skuIds);
 }

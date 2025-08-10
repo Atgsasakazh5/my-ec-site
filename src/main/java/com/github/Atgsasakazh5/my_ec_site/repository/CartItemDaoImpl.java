@@ -79,6 +79,12 @@ public class CartItemDaoImpl implements CartItemDao {
     }
 
     @Override
+    public void deleteByCartId(Long cartId) {
+        String sql = "DELETE FROM cart_items WHERE cart_id = ?";
+        jdbcTemplate.update(sql, cartId);
+    }
+
+    @Override
     public CartItem update(CartItem cartItem) {
         String sql = "UPDATE cart_items SET quantity = ? WHERE id = ?";
         jdbcTemplate.update(sql, cartItem.getQuantity(), cartItem.getId());
@@ -87,6 +93,7 @@ public class CartItemDaoImpl implements CartItemDao {
 
     @Override
     public List<CartItemDto> findDetailedItemsByCartId(Long cartId) {
+        // inventoriesテーブルへのJOINを追加
         String sql = """
                 SELECT
                     ci.id AS cart_item_id,
@@ -96,13 +103,16 @@ public class CartItemDaoImpl implements CartItemDao {
                     s.size,
                     s.color,
                     (p.price + s.extra_price) AS final_price,
-                    ci.quantity
+                    ci.quantity,
+                    i.quantity AS stock_quantity
                 FROM
                     cart_items ci
                 JOIN
                     skus s ON ci.sku_id = s.id
                 JOIN
                     products p ON s.product_id = p.id
+                JOIN
+                    inventories i ON s.id = i.sku_id
                 WHERE
                     ci.cart_id = ?
                 """;
@@ -115,7 +125,9 @@ public class CartItemDaoImpl implements CartItemDao {
                 rs.getString("size"),
                 rs.getString("color"),
                 rs.getInt("final_price"),
-                rs.getInt("quantity"));
+                rs.getInt("quantity"),
+                rs.getInt("stock_quantity") // stock_quantityをマッピング
+        );
 
         return jdbcTemplate.query(sql, rowMapper, cartId);
     }

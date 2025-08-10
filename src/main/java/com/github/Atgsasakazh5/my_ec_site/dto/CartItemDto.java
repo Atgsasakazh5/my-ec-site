@@ -8,6 +8,7 @@ public record CartItemDto(
         String size,
         String color,
         Integer price,
-        Integer quantity
+        Integer quantity,
+        Integer stockQuantity
 ) {
 }

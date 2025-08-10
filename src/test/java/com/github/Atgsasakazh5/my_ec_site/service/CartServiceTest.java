@@ -60,7 +60,8 @@ class CartServiceTest {
                         "S",
                         "Red",
                         1000,
-                        3)
+                        3,
+                        10)
         ));
 
         // Act
@@ -92,7 +93,8 @@ class CartServiceTest {
                         "S",
                         "Red",
                         1000,
-                        3)
+                        3,
+                        10)
         ));
 
         // Act
@@ -149,7 +151,15 @@ class CartServiceTest {
 
         when(cartItemDao.findByCartIdAndSkuId(cartId, skuId)).thenReturn(Optional.empty());
 
-        var finalCartItems = List.of(new CartItemDto(301L, "Test Product", null, skuId, "M", "Red", 1100, 2));
+        var finalCartItems = List.of(new CartItemDto(301L,
+                "Test Product",
+                null,
+                skuId,
+                "M",
+                "Red",
+                1100,
+                2,
+                10));
         when(cartItemDao.findDetailedItemsByCartId(cartId)).thenReturn(finalCartItems);
 
         // Act
@@ -178,7 +188,15 @@ class CartServiceTest {
 
         when(cartItemDao.findByCartIdAndSkuId(cartId, skuId)).thenReturn(Optional.of(existingItem));
 
-        var finalCartItems = List.of(new CartItemDto(301L, "Test Product", null, skuId, "M", "Red", 1100, 5));
+        var finalCartItems = List.of(new CartItemDto(
+                301L,
+                "Test Product",
+                null, skuId,
+                "M",
+                "Red",
+                1100,
+                5,
+                10));
         when(cartItemDao.findDetailedItemsByCartId(cartId)).thenReturn(finalCartItems);
 
         // Act
@@ -237,7 +255,15 @@ class CartServiceTest {
         when(inventoryDao.findBySkuId(existingItem.getSkuId()))
                 .thenReturn(Optional.of(new Inventory(1L, existingItem.getSkuId(), 10, null)));
 
-        var finalCartItems = List.of(new CartItemDto(1L, "Test Item", null, 1L, "M", "Red", 1100, 3));
+        var finalCartItems = List.of(new CartItemDto(1L,
+                "Test Item",
+                null,
+                1L,
+                "M",
+                "Red",
+                1100,
+                3,
+                10));
         when(cartItemDao.findDetailedItemsByCartId(1L)).thenReturn(finalCartItems);
 
         // Act

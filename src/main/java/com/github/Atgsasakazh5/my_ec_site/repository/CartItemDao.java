@@ -18,6 +18,8 @@ public interface CartItemDao {
 
     void deleteById(Long id);
 
+    void deleteByCartId(Long cartId);
+
     CartItem update(CartItem cartItem);
 
     List<CartItemDto> findDetailedItemsByCartId(Long cartId);
