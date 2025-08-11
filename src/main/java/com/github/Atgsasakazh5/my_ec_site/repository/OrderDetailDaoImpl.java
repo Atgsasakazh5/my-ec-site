@@ -45,7 +45,7 @@ public class OrderDetailDaoImpl implements OrderDetailDao {
 
     @Override
     public List<OrderDetailDto> findByOrderId(Long orderId) {
-        String sql = "SELECT od.id, od.sku_id, p.name AS product_name, " +
+        String sql = "SELECT od.id, od.order_id, od.sku_id, p.name AS product_name, " +
                 "s.size, s.color, p.image_url, od.price_at_order, od.quantity " +
                 "FROM order_details od " +
                 "JOIN skus s ON od.sku_id = s.id " +
@@ -58,6 +58,7 @@ public class OrderDetailDaoImpl implements OrderDetailDao {
         return namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) ->
                 new OrderDetailDto(
                         rs.getLong("id"),
+                        rs.getLong("order_id"),
                         rs.getLong("sku_id"),
                         rs.getString("product_name"),
                         rs.getString("size"),

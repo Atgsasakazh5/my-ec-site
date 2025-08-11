@@ -1,0 +1,154 @@
+package com.github.Atgsasakazh5.my_ec_site.repository;
+
+import com.github.Atgsasakazh5.my_ec_site.entity.Order;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+
+@ActiveProfiles("h2")
+@JdbcTest
+@Import(OrderDaoImpl.class)
+@Transactional
+class OrderDaoImplTest {
+
+    @Autowired
+    private OrderDaoImpl orderDao;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    private long userId = 1050L;
+
+    @BeforeEach
+    void setUp() {
+        jdbcTemplate.update(
+                "INSERT INTO users (id, name, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+                userId, "Test User", "test@example.com", "password", LocalDateTime.now(), LocalDateTime.now()
+        );
+    }
+
+    @Test
+    @DisplayName("注文を保存できること")
+    void saveOrder() {
+
+        // Arrange
+        String status = "PENDING";
+        int totalPrice = 1000;
+        String shippingAddress = "Tokyo, Japan";
+        String postalCode = "100-0001";
+        String shippingName = "Test User";
+
+        var order = new Order();
+        order.setUserId(userId);
+        order.setStatus(status);
+        order.setTotalPrice(totalPrice);
+        order.setShippingAddress(shippingAddress);
+        order.setPostalCode(postalCode);
+        order.setShippingName(shippingName);
+
+        // Act
+        var savedOrder = orderDao.saveOrder(order);
+
+        // Assert
+        assertNotNull(savedOrder);
+        assertNotNull(savedOrder.getId());
+        assertEquals(userId, savedOrder.getUserId());
+        assertEquals(status, savedOrder.getStatus());
+        assertEquals(totalPrice, savedOrder.getTotalPrice());
+        assertEquals(shippingAddress, savedOrder.getShippingAddress());
+        assertEquals(postalCode, savedOrder.getPostalCode());
+        assertEquals(shippingName, savedOrder.getShippingName());
+        assertNotNull(savedOrder.getOrderedAt());
+
+    }
+
+    @Test
+    @DisplayName("orderIdから注文を取得できること")
+    void findOrderById() {
+        // Arrange
+        String status = "PENDING";
+        int totalPrice = 1000;
+        String shippingAddress = "Tokyo, Japan";
+        String postalCode = "100-0001";
+        String shippingName = "Test User";
+
+        var order = new Order();
+        order.setUserId(userId);
+        order.setStatus(status);
+        order.setTotalPrice(totalPrice);
+        order.setShippingAddress(shippingAddress);
+        order.setPostalCode(postalCode);
+        order.setShippingName(shippingName);
+
+        var savedOrder = orderDao.saveOrder(order);
+
+        // Act
+        var foundOrder = orderDao.findOrderById(savedOrder.getId());
+
+        // Assert
+        assertTrue(foundOrder.isPresent());
+        assertEquals(savedOrder.getId(), foundOrder.get().getId());
+        assertEquals(userId, foundOrder.get().getUserId());
+        assertEquals(status, foundOrder.get().getStatus());
+        assertEquals(totalPrice, foundOrder.get().getTotalPrice());
+        assertEquals(shippingAddress, foundOrder.get().getShippingAddress());
+        assertEquals(postalCode, foundOrder.get().getPostalCode());
+        assertEquals(shippingName, foundOrder.get().getShippingName());
+        assertNotNull(foundOrder.get().getOrderedAt());
+    }
+
+    @Test
+    @DisplayName("ユーザーIDから全ての注文を取得できること")
+    void findAllOrdersByUserId() {
+        // Arrange
+        String status = "PENDING";
+        int totalPrice = 1000;
+        String shippingAddress = "Tokyo, Japan";
+        String postalCode = "100-0001";
+        String shippingName = "Test User";
+
+        var order1 = new Order();
+        order1.setUserId(userId);
+        order1.setStatus(status);
+        order1.setTotalPrice(totalPrice);
+        order1.setShippingAddress(shippingAddress);
+        order1.setPostalCode(postalCode);
+        order1.setShippingName(shippingName);
+
+        var savedOrder1 = orderDao.saveOrder(order1);
+
+        var order2 = new Order();
+        order2.setUserId(userId);
+        order2.setStatus("COMPLETED");
+        order2.setTotalPrice(2000);
+        order2.setShippingAddress("Osaka, Japan");
+        order2.setPostalCode("530-0001");
+        order2.setShippingName("Another User");
+
+        var savedOrder2 = orderDao.saveOrder(order2);
+
+        // Act
+        var orders = orderDao.findAllOrdersByUserId(userId);
+
+        // Assert
+        assertThat(orders)
+                .isNotNull()
+                .hasSize(2);
+
+        assertThat(orders)
+                .usingRecursiveFieldByFieldElementComparator() // オブジェクトの中身を比較
+                .containsExactlyInAnyOrder(savedOrder1, savedOrder2);
+    }
+
+}

@@ -354,6 +354,48 @@ class CartServiceTest {
     }
 
     @Test
+    @DisplayName("カートからアイテムを削除できること")
+    void deleteItemFromCart_shouldSucceed_whenItemBelongsToUser() {
+        // Arrange
+        String email = "test@example.com";
+        Long cartId = 1L;
+        Long cartItemId = 101L;
+
+        var cart = new Cart(cartId, 1L);
+        var cartItem = new CartItem(cartItemId, cartId, 201L, 1);
+
+        when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(cart));
+        when(cartItemDao.findById(cartItemId)).thenReturn(Optional.of(cartItem));
+
+        // Act
+        cartService.deleteItemFromCart(email, cartItemId);
+
+        // Assert
+        verify(cartItemDao, times(1)).deleteById(cartItemId);
+    }
+
+    @Test
+    @DisplayName("他人のカートアイテムを削除しようとするとSecurityExceptionをスローすること")
+    void deleteItemFromCart_shouldThrowException_whenItemDoesNotBelongToUser() {
+        // Arrange
+        String email = "test@example.com";
+        Long userCartId = 1L;
+        Long otherUserCartId = 2L;
+        Long cartItemId = 101L;
+
+        var cart = new Cart(userCartId, 1L);
+        var cartItem = new CartItem(cartItemId, otherUserCartId, 201L, 1);
+
+        when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(cart));
+        when(cartItemDao.findById(cartItemId)).thenReturn(Optional.of(cartItem));
+
+        // Act & Assert
+        assertThrows(SecurityException.class, () -> {
+            cartService.deleteItemFromCart(email, cartItemId);
+        });
+    }
+
+    @Test
     @DisplayName("存在しないCartItemIDでResorceNotFoundExceptionがスローされること")
     void deleteFromCart_shuldThrowException_whenCartItemIdNotExist() {
         // Arrange
@@ -366,6 +408,54 @@ class CartServiceTest {
         // Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> {
             cartService.deleteItemFromCart(email, cartItemId);
+        });
+    }
+
+    @Test
+    @DisplayName("在庫が十分な場合、例外が発生しないこと")
+    void validateCartInventory_shouldSucceed_whenInventoryIsSufficient() {
+        // Arrange
+        String email = "test@example.com";
+        var cart = new Cart(1L, 1L);
+        var cartItems = List.of(
+                new CartItemDto(101L, "Tシャツ", null, 201L, "S", "Red", 1500, 2, 10)
+        );
+        var lockedInventories = List.of(
+                new Inventory(301L, 201L, 10, null)
+        );
+        List<Long> skuIds = List.of(201L);
+
+        when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(cart));
+        when(cartItemDao.findDetailedItemsByCartId(cart.getId())).thenReturn(cartItems);
+        when(inventoryDao.findBySkuIdsWithLock(skuIds)).thenReturn(lockedInventories);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> cartService.validateCartInventory(email));
+    }
+
+    @Test
+    @DisplayName("在庫が不足している場合、IllegalStateExceptionをスローすること")
+    void validateCartInventory_shouldThrowException_whenInventoryIsInsufficient() {
+        // Arrange
+        String email = "test@example.com";
+        var cart = new Cart(1L, 1L);
+        // カートには10個要求
+        var cartItems = List.of(
+                new CartItemDto(101L, "Tシャツ", null, 201L, "S", "Red", 1500, 10, 5)
+        );
+        // 実際の在庫は5個しかない
+        var lockedInventories = List.of(
+                new Inventory(301L, 201L, 5, null)
+        );
+        List<Long> skuIds = List.of(201L);
+
+        when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(cart));
+        when(cartItemDao.findDetailedItemsByCartId(cart.getId())).thenReturn(cartItems);
+        when(inventoryDao.findBySkuIdsWithLock(skuIds)).thenReturn(lockedInventories);
+
+        // Act & Assert
+        assertThrows(IllegalStateException.class, () -> {
+            cartService.validateCartInventory(email);
         });
     }
 }

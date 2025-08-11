@@ -11,6 +11,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -29,7 +30,7 @@ public class OrderDaoImpl implements OrderDao {
                     rs.getString("status"),
                     rs.getInt("total_price"),
                     rs.getString("shipping_address"),
-                    rs.getString("postal_code"),
+                    rs.getString("shipping_postal_code"),
                     rs.getString("shipping_name"),
                     rs.getTimestamp("ordered_at").toLocalDateTime()
             );
@@ -38,7 +39,7 @@ public class OrderDaoImpl implements OrderDao {
     public Order saveOrder(Order order) {
         LocalDateTime now = LocalDateTime.now();
         order.setOrderedAt(now);
-        String sql = "INSERT INTO orders (user_id, status, total_price, shipping_address, postal_code, shipping_name, ordered_at) " +
+        String sql = "INSERT INTO orders (user_id, status, total_price, shipping_address, shipping_postal_code, shipping_name, ordered_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         var keyHolder = new GeneratedKeyHolder();
@@ -53,7 +54,12 @@ public class OrderDaoImpl implements OrderDao {
             ps.setTimestamp(7, Timestamp.valueOf(order.getOrderedAt()));
             return ps;
         }, keyHolder);
-        order.setId(keyHolder.getKey().longValue());
+        Map<String, Object> keys = keyHolder.getKeys();
+        if (keys != null && keys.containsKey("id")) {
+            order.setId(((Number) keys.get("id")).longValue());
+        } else {
+            throw new IllegalStateException("データベースから生成されたIDの取得に失敗しました。");
+        }
         return order;
     }
 
