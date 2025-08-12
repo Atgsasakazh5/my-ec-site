@@ -14,7 +14,7 @@ public class Order {
 
     private Long id;
     private Long userId; // 外部キー
-    private String status;
+    private OrderStatus status;
     private Integer totalPrice;
     private String shippingAddress;
     private String postalCode;

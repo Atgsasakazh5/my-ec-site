@@ -1,6 +1,7 @@
 package com.github.Atgsasakazh5.my_ec_site.repository;
 
 import com.github.Atgsasakazh5.my_ec_site.entity.Order;
+import com.github.Atgsasakazh5.my_ec_site.entity.OrderStatus;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -27,7 +28,7 @@ public class OrderDaoImpl implements OrderDao {
             new Order(
                     rs.getLong("id"),
                     rs.getLong("user_id"),
-                    rs.getString("status"),
+                    OrderStatus.valueOf(rs.getString("status")),
                     rs.getInt("total_price"),
                     rs.getString("shipping_address"),
                     rs.getString("shipping_postal_code"),
@@ -46,7 +47,7 @@ public class OrderDaoImpl implements OrderDao {
         jdbcTemplate.update(connection -> {
             var ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setLong(1, order.getUserId());
-            ps.setString(2, order.getStatus());
+            ps.setString(2, order.getStatus().name());
             ps.setInt(3, order.getTotalPrice());
             ps.setString(4, order.getShippingAddress());
             ps.setString(5, order.getPostalCode());

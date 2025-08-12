@@ -7,7 +7,7 @@ import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.Cart;
 import com.github.Atgsasakazh5.my_ec_site.entity.Inventory;
 import com.github.Atgsasakazh5.my_ec_site.entity.Order;
-import com.github.Atgsasakazh5.my_ec_site.entity.OrderDetail;
+import com.github.Atgsasakazh5.my_ec_site.entity.OrderStatus;
 import com.github.Atgsasakazh5.my_ec_site.exception.ResourceNotFoundException;
 import com.github.Atgsasakazh5.my_ec_site.repository.*;
 import org.junit.jupiter.api.DisplayName;
@@ -62,7 +62,7 @@ class OrderServiceTest {
                 new Order(
                         orderId,
                         1L,
-                        "PENDING",
+                        OrderStatus.PENDING,
                         1000,
                         "123 Main St",
                         "Tokyo",
@@ -110,7 +110,7 @@ class OrderServiceTest {
                 new Order(
                         orderId,
                         otherUserId,
-                        "PENDING",
+                        OrderStatus.PENDING,
                         1000,
                         "東京丸の内",
                         "123-4321",
@@ -160,7 +160,7 @@ class OrderServiceTest {
         var lockedInventories = List.of(new Inventory(301L, skuId, 10, null));
         when(inventoryDao.findBySkuIdsWithLock(List.of(skuId))).thenReturn(lockedInventories);
 
-        var savedOrder = new Order(501L, userId, "PENDING", 3000, "Tokyo", "100-0001", "Test User", LocalDateTime.now());
+        var savedOrder = new Order(501L, userId, OrderStatus.PENDING, 3000, "Tokyo", "100-0001", "Test User", LocalDateTime.now());
 
         when(orderDao.findOrderById(savedOrder.getId())).thenReturn(Optional.of(savedOrder));
         when(orderDao.saveOrder(any(Order.class))).thenReturn(savedOrder);

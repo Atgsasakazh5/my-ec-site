@@ -4,10 +4,7 @@ import com.github.Atgsasakazh5.my_ec_site.dto.CartItemDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.CreateOrderRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.OrderDetailDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
-import com.github.Atgsasakazh5.my_ec_site.entity.Cart;
-import com.github.Atgsasakazh5.my_ec_site.entity.Inventory;
-import com.github.Atgsasakazh5.my_ec_site.entity.Order;
-import com.github.Atgsasakazh5.my_ec_site.entity.OrderDetail;
+import com.github.Atgsasakazh5.my_ec_site.entity.*;
 import com.github.Atgsasakazh5.my_ec_site.exception.ResourceNotFoundException;
 import com.github.Atgsasakazh5.my_ec_site.repository.*;
 import org.springframework.stereotype.Service;
@@ -95,7 +92,7 @@ public class OrderService {
         // 注文を作成
         Order order = new Order();
         order.setUserId(cart.getUserId());
-        order.setStatus("PENDING");
+        order.setStatus(OrderStatus.PENDING);
 
         // 合計金額を再計算
         int totalPrice = cartItems.stream().mapToInt(item -> item.price() * item.quantity()).sum();

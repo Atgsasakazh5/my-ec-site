@@ -1,6 +1,7 @@
 package com.github.Atgsasakazh5.my_ec_site.repository;
 
 import com.github.Atgsasakazh5.my_ec_site.entity.Order;
+import com.github.Atgsasakazh5.my_ec_site.entity.OrderStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ class OrderDaoImplTest {
     void saveOrder() {
 
         // Arrange
-        String status = "PENDING";
+        OrderStatus status = OrderStatus.PENDING;
         int totalPrice = 1000;
         String shippingAddress = "Tokyo, Japan";
         String postalCode = "100-0001";
@@ -77,7 +78,7 @@ class OrderDaoImplTest {
     @DisplayName("orderIdから注文を取得できること")
     void findOrderById() {
         // Arrange
-        String status = "PENDING";
+        var status = OrderStatus.PENDING;
         int totalPrice = 1000;
         String shippingAddress = "Tokyo, Japan";
         String postalCode = "100-0001";
@@ -112,7 +113,7 @@ class OrderDaoImplTest {
     @DisplayName("ユーザーIDから全ての注文を取得できること")
     void findAllOrdersByUserId() {
         // Arrange
-        String status = "PENDING";
+        var status = OrderStatus.PENDING;
         int totalPrice = 1000;
         String shippingAddress = "Tokyo, Japan";
         String postalCode = "100-0001";
@@ -130,7 +131,7 @@ class OrderDaoImplTest {
 
         var order2 = new Order();
         order2.setUserId(userId);
-        order2.setStatus("COMPLETED");
+        order2.setStatus(OrderStatus.DELIVERED);
         order2.setTotalPrice(2000);
         order2.setShippingAddress("Osaka, Japan");
         order2.setPostalCode("530-0001");
