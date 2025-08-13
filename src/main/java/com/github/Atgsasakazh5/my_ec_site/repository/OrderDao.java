@@ -12,4 +12,6 @@ public interface OrderDao {
     Optional<Order> findOrderById(Long orderId);
 
     List<Order> findAllOrdersByUserId(Long userId);
+
+    Order updateOrder(Order order);
 }

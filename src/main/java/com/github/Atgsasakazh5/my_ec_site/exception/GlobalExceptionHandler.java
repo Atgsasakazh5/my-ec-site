@@ -1,6 +1,7 @@
 package com.github.Atgsasakazh5.my_ec_site.exception;
 
 import com.github.Atgsasakazh5.my_ec_site.dto.ApiResponse;
+import com.stripe.exception.CardException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -23,7 +24,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        // エラーメッセージを連結して、より分かりやすくすることも可能
         String errorMessage = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
@@ -49,6 +49,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(
                 new ApiResponse(false, e.getMessage()),
                 HttpStatus.FORBIDDEN
+        );
+    }
+
+    @ExceptionHandler(CardException.class)
+    public ResponseEntity<ApiResponse> handleCardException(CardException e) {
+        return new ResponseEntity<>(
+                new ApiResponse(false, e.getMessage()),
+                HttpStatus.BAD_REQUEST
         );
     }
 }

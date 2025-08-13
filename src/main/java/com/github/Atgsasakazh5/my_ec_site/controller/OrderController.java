@@ -1,8 +1,11 @@
 package com.github.Atgsasakazh5.my_ec_site.controller;
 
+import com.github.Atgsasakazh5.my_ec_site.dto.ApiResponse;
 import com.github.Atgsasakazh5.my_ec_site.dto.CreateOrderRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.OrderDetailDto;
+import com.github.Atgsasakazh5.my_ec_site.dto.PaymentRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.service.OrderService;
+import com.github.Atgsasakazh5.my_ec_site.service.PaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +23,11 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    public OrderController(OrderService orderService) {
+    private final PaymentService paymentService;
+
+    public OrderController(OrderService orderService, PaymentService paymentService) {
         this.orderService = orderService;
+        this.paymentService = paymentService;
     }
 
     @PostMapping
@@ -33,5 +39,13 @@ public class OrderController {
         List<OrderDetailDto> orderDetails = orderService.placeOrder(email, createOrderRequestDto);
         return new ResponseEntity<>(orderDetails, HttpStatus.CREATED);
 
+    }
+
+    @PostMapping("/payment")
+    public ResponseEntity<ApiResponse> handlePayment(
+            @Valid @RequestBody PaymentRequestDto request
+    ) {
+        paymentService.processPayment(request);
+        return ResponseEntity.ok(new ApiResponse(true, "支払いが完了しました。"));
     }
 }

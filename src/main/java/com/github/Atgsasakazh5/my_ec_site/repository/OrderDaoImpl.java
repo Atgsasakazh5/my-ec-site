@@ -2,6 +2,7 @@ package com.github.Atgsasakazh5.my_ec_site.repository;
 
 import com.github.Atgsasakazh5.my_ec_site.entity.Order;
 import com.github.Atgsasakazh5.my_ec_site.entity.OrderStatus;
+import com.github.Atgsasakazh5.my_ec_site.exception.ResourceNotFoundException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -78,5 +79,28 @@ public class OrderDaoImpl implements OrderDao {
     public List<Order> findAllOrdersByUserId(Long userId) {
         String sql = "SELECT * FROM orders WHERE user_id = ? ORDER BY ordered_at DESC";
         return jdbcTemplate.query(sql, orderRowMapper, userId);
+    }
+
+    @Override
+    public Order updateOrder(Order order) {
+
+        String sql = "UPDATE orders SET status = ?, total_price = ?, shipping_address = ?, " +
+                "shipping_postal_code = ?, shipping_name = ?, ordered_at = ? WHERE id = ?";
+
+        int rowsAffected = jdbcTemplate.update(sql,
+                order.getStatus().name(),
+                order.getTotalPrice(),
+                order.getShippingAddress(),
+                order.getPostalCode(),
+                order.getShippingName(),
+                order.getOrderedAt(),
+                order.getId()
+        );
+
+        if (rowsAffected == 0) {
+            throw new ResourceNotFoundException("更新対象の注文が見つかりません。ID: " + order.getId());
+        }
+
+        return order;
     }
 }
