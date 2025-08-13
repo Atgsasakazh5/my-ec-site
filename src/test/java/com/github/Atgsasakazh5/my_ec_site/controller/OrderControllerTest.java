@@ -3,12 +3,16 @@ package com.github.Atgsasakazh5.my_ec_site.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.Atgsasakazh5.my_ec_site.dto.CreateOrderRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.OrderDetailDto;
+import com.github.Atgsasakazh5.my_ec_site.dto.PaymentRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.service.OrderService;
+import com.github.Atgsasakazh5.my_ec_site.service.PaymentService;
+import com.stripe.exception.CardException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -19,6 +23,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,6 +36,9 @@ class OrderControllerTest {
 
     @MockitoBean
     private OrderService orderService;
+
+    @MockitoBean
+    private PaymentService paymentService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -134,6 +142,42 @@ class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("在庫が不足しています"));
+    }
+
+    @Test
+    @DisplayName("支払いが成功すること")
+    @WithMockUser(username = "test@email.com", roles = "USER")
+    void handlePayment_shouldSucceed() throws Exception {
+        // Arrange
+        var request = new PaymentRequestDto(1L, "pm_test");
+
+        // Act & Assert
+        mockMvc.perform(post("/api/orders/payment")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("支払いが完了しました。"));
+    }
+
+    @Test
+    @DisplayName("カードエラーで支払いが失敗すること")
+    @WithMockUser(username = "test@email.com", roles = "USER")
+    void handlePayment_shouldFail_whenCardIsDeclined() throws Exception {
+        // Arrange
+        var request = new PaymentRequestDto(1L, "pm_card_declined");
+        String stripeErrorMessage = "支払いが失敗しました。";
+
+        doThrow(new IllegalStateException(stripeErrorMessage))
+                .when(paymentService).processPayment(any(PaymentRequestDto.class));
+
+        // Act & Assert
+        mockMvc.perform(post("/api/orders/payment")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(stripeErrorMessage));
     }
 
 }

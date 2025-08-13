@@ -2,6 +2,7 @@ package com.github.Atgsasakazh5.my_ec_site.repository;
 
 import com.github.Atgsasakazh5.my_ec_site.entity.Order;
 import com.github.Atgsasakazh5.my_ec_site.entity.OrderStatus;
+import com.github.Atgsasakazh5.my_ec_site.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -150,6 +151,54 @@ class OrderDaoImplTest {
         assertThat(orders)
                 .usingRecursiveFieldByFieldElementComparator() // オブジェクトの中身を比較
                 .containsExactlyInAnyOrder(savedOrder1, savedOrder2);
+    }
+
+    @Test
+    @DisplayName("注文情報を更新できること")
+    void updateOrder_shouldUpdateOrder_whenOrderExists() {
+        // Arrange
+        var status = OrderStatus.PENDING;
+        int totalPrice = 1000;
+        String shippingAddress = "Tokyo, Japan";
+        String postalCode = "100-0001";
+        String shippingName = "Test User";
+
+        var order1 = new Order();
+        order1.setUserId(userId);
+        order1.setStatus(status);
+        order1.setTotalPrice(totalPrice);
+        order1.setShippingAddress(shippingAddress);
+        order1.setPostalCode(postalCode);
+        order1.setShippingName(shippingName);
+
+        var existingOrder = orderDao.saveOrder(order1);
+
+        existingOrder.setStatus(OrderStatus.SHIPPED);
+        existingOrder.setShippingAddress("新しい住所");
+
+        // Act
+        Order updatedOrder = orderDao.updateOrder(existingOrder);
+
+        // Assert
+        assertThat(updatedOrder.getStatus()).isEqualTo(OrderStatus.SHIPPED);
+        assertThat(updatedOrder.getShippingAddress()).isEqualTo("新しい住所");
+
+        Order foundOrder = orderDao.findOrderById(existingOrder.getId()).get();
+        assertThat(foundOrder.getStatus()).isEqualTo(OrderStatus.SHIPPED);
+    }
+
+    @Test
+    @DisplayName("存在しない注文IDで更新しようとすると例外をスローすること")
+    void updateOrder_shouldThrowException_whenOrderDoesNotExist() {
+        // Arrange
+        Order nonExistentOrder = new Order();
+        nonExistentOrder.setId(999L);
+        nonExistentOrder.setStatus(OrderStatus.PENDING);
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            orderDao.updateOrder(nonExistentOrder);
+        });
     }
 
 }
