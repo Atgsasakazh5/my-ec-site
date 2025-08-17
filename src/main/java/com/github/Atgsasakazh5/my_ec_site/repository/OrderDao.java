@@ -1,5 +1,6 @@
 package com.github.Atgsasakazh5.my_ec_site.repository;
 
+import com.github.Atgsasakazh5.my_ec_site.dto.OrderSummaryDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.Order;
 
 import java.util.List;
@@ -14,4 +15,6 @@ public interface OrderDao {
     List<Order> findAllOrdersByUserId(Long userId);
 
     Order updateOrder(Order order);
+
+    List<OrderSummaryDto> findOrderSummariesByUserId(Long userId);
 }

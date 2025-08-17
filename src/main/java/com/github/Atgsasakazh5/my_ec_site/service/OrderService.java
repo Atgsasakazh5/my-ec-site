@@ -1,9 +1,6 @@
 package com.github.Atgsasakazh5.my_ec_site.service;
 
-import com.github.Atgsasakazh5.my_ec_site.dto.CartItemDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.CreateOrderRequestDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.OrderDetailDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
+import com.github.Atgsasakazh5.my_ec_site.dto.*;
 import com.github.Atgsasakazh5.my_ec_site.entity.*;
 import com.github.Atgsasakazh5.my_ec_site.exception.ResourceNotFoundException;
 import com.github.Atgsasakazh5.my_ec_site.repository.*;
@@ -116,5 +113,38 @@ public class OrderService {
 
         // 注文詳細を返却
         return getOrderDetails(email, savedOrder.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderSummaryDto> getOrderSummaries(String email) {
+        UserDto user = userService.findByEmail(email);
+
+        return orderDao.findOrderSummariesByUserId(user.id());
+    }
+
+    @Transactional(readOnly = true)
+    public OrderDetailResponse getOrderDetail(String email, Long orderId) {
+        UserDto user = userService.findByEmail(email);
+
+        Order order = orderDao.findOrderById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("注文が見つかりません: " + orderId));
+
+        // オーダーの属するユーザーとリクエストしているユーザーが一致するかを確認
+        if (!order.getUserId().equals(user.id())) {
+            throw new SecurityException("この注文にアクセスする権限がありません。");
+        }
+
+        List<OrderDetailDto> orderDetails = orderDetailDao.findByOrderId(orderId);
+
+        return new OrderDetailResponse(
+                order.getId(),
+                order.getShippingAddress(),
+                order.getPostalCode(),
+                order.getShippingName(),
+                order.getTotalPrice(),
+                order.getStatus(),
+                order.getOrderedAt(),
+                orderDetails
+        );
     }
 }

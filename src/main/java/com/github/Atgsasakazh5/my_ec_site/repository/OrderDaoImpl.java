@@ -1,11 +1,13 @@
 package com.github.Atgsasakazh5.my_ec_site.repository;
 
+import com.github.Atgsasakazh5.my_ec_site.dto.OrderSummaryDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.Order;
 import com.github.Atgsasakazh5.my_ec_site.entity.OrderStatus;
 import com.github.Atgsasakazh5.my_ec_site.exception.ResourceNotFoundException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 
@@ -21,8 +23,12 @@ public class OrderDaoImpl implements OrderDao {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public OrderDaoImpl(JdbcTemplate jdbcTemplate) {
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+    public OrderDaoImpl(JdbcTemplate jdbcTemplate,
+                        NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
     private final RowMapper<Order> orderRowMapper = (rs, rowNum) ->
@@ -102,5 +108,33 @@ public class OrderDaoImpl implements OrderDao {
         }
 
         return order;
+    }
+
+    @Override
+    public List<OrderSummaryDto> findOrderSummariesByUserId(Long userId) {
+        String sql = """
+                SELECT
+                    o.id,
+                    o.ordered_at,
+                    o.total_price,
+                    o.status
+                FROM
+                    orders o
+                WHERE
+                    o.user_id = :userId
+                ORDER BY
+                    o.ordered_at DESC
+                """;
+
+        Map<String, Object> params = Map.of("userId", userId);
+
+        RowMapper<OrderSummaryDto> rowMapper = (rs, rowNum) -> new OrderSummaryDto(
+                rs.getLong("id"),
+                rs.getTimestamp("ordered_at").toLocalDateTime(),
+                rs.getInt("total_price"),
+                OrderStatus.valueOf(rs.getString("status"))
+        );
+
+        return namedParameterJdbcTemplate.query(sql, params, rowMapper);
     }
 }
