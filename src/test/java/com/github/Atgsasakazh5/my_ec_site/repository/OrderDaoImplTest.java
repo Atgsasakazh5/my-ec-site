@@ -1,5 +1,6 @@
 package com.github.Atgsasakazh5.my_ec_site.repository;
 
+import com.github.Atgsasakazh5.my_ec_site.dto.OrderSummaryDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.Order;
 import com.github.Atgsasakazh5.my_ec_site.entity.OrderStatus;
 import com.github.Atgsasakazh5.my_ec_site.exception.ResourceNotFoundException;
@@ -14,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -201,4 +203,28 @@ class OrderDaoImplTest {
         });
     }
 
+    @Test
+    @DisplayName("ユーザーIDで注文概要リストを取得できること")
+    void findOrderSummariesByUserId_shouldReturnOrderSummaries() {
+        // Arrange
+        jdbcTemplate.update("INSERT INTO orders (user_id, status, total_price, ordered_at," +
+                " shipping_address, shipping_postal_code, shipping_name) " +
+                "VALUES (?, 'PAID', 1500, '2025-08-18 10:00:00', '東京都新宿区', '100-0003', '田中')", userId);
+        jdbcTemplate.update("INSERT INTO orders (user_id, status, total_price, ordered_at," +
+                " shipping_address, shipping_postal_code, shipping_name) " +
+                "VALUES (?, 'SHIPPED', 2500, '2025-08-17 12:00:00', '東京都新宿区', '100-0003', '田中')", userId);
+
+        // Act
+        List<OrderSummaryDto> summaries = orderDao.findOrderSummariesByUserId(userId);
+
+        // Assert
+        assertThat(summaries).hasSize(2);
+
+        // ソートされているので、新しい方の注文が先頭に来る
+        assertThat(summaries.get(0).totalPrice()).isEqualTo(1500);
+        assertThat(summaries.get(0).status()).isEqualTo(OrderStatus.PAID);
+
+        assertThat(summaries.get(1).totalPrice()).isEqualTo(2500);
+        assertThat(summaries.get(1).status()).isEqualTo(OrderStatus.SHIPPED);
+    }
 }

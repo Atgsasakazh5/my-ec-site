@@ -5,7 +5,7 @@ import com.github.Atgsasakazh5.my_ec_site.entity.OrderStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record OrderDetailResponse(
+public record OrderDetailResponseDto(
         Long orderId,
         String shippingAddress,
         String postalCode,

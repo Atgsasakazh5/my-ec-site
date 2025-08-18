@@ -1,19 +1,13 @@
 package com.github.Atgsasakazh5.my_ec_site.controller;
 
-import com.github.Atgsasakazh5.my_ec_site.dto.ApiResponse;
-import com.github.Atgsasakazh5.my_ec_site.dto.CreateOrderRequestDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.OrderDetailDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.PaymentRequestDto;
+import com.github.Atgsasakazh5.my_ec_site.dto.*;
 import com.github.Atgsasakazh5.my_ec_site.service.OrderService;
 import com.github.Atgsasakazh5.my_ec_site.service.PaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -47,5 +41,22 @@ public class OrderController {
     ) {
         paymentService.processPayment(request);
         return ResponseEntity.ok(new ApiResponse(true, "支払いが完了しました。"));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<OrderSummaryDto>> getOrderSummaries(
+            Authentication authentication) {
+        String email = authentication.getName();
+        List<OrderSummaryDto> orders = orderService.getOrderSummaries(email);
+        return ResponseEntity.ok(orders);
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderDetailResponseDto> getOrderDetails(
+            Authentication authentication,
+            @PathVariable Long orderId) {
+        String email = authentication.getName();
+        var orderDetail = orderService.getOrderDetail(email, orderId);
+        return ResponseEntity.ok(orderDetail);
     }
 }

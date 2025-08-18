@@ -1,9 +1,6 @@
 package com.github.Atgsasakazh5.my_ec_site.service;
 
-import com.github.Atgsasakazh5.my_ec_site.dto.CartItemDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.CreateOrderRequestDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.OrderDetailDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
+import com.github.Atgsasakazh5.my_ec_site.dto.*;
 import com.github.Atgsasakazh5.my_ec_site.entity.Cart;
 import com.github.Atgsasakazh5.my_ec_site.entity.Inventory;
 import com.github.Atgsasakazh5.my_ec_site.entity.Order;
@@ -216,5 +213,104 @@ class OrderServiceTest {
         });
         verify(inventoryDao, never()).updateAll(anyList());
 
+    }
+
+    @Test
+    @DisplayName("自分のorder一覧を取得できること-正常系")
+    void getOrderSummaries_shouldReturnOrderSummaries_whenUserHasOrders() {
+        // Arrange
+        String email = "test@email.com";
+        Long userId = 1L;
+        when(userService.findByEmail(email)).thenReturn(new UserDto(userId, "Test User", email));
+
+        var now = LocalDateTime.now();
+        var expectedSummaries = List.of(
+                new OrderSummaryDto(1L, now, 3000, OrderStatus.PENDING),
+                new OrderSummaryDto(2L, now, 5000, OrderStatus.SHIPPED)
+        );
+        when(orderDao.findOrderSummariesByUserId(userId)).thenReturn(expectedSummaries);
+
+        // Act
+        List<OrderSummaryDto> actualSummaries = orderService.getOrderSummaries(email);
+
+        // Assert
+        assertThat(actualSummaries).isNotEmpty();
+        assertThat(actualSummaries).hasSize(2);
+        assertThat(actualSummaries).isEqualTo(expectedSummaries);
+    }
+
+    @Test
+    @DisplayName("自分の注文詳細を正しく取得できること")
+    void getOrderDetail_shouldSucceed_whenOrderBelongsToUser() {
+        // Arrange
+        String email = "test@example.com";
+        Long userId = 1L;
+        Long orderId = 101L;
+
+        when(userService.findByEmail(email)).thenReturn(new UserDto(userId, "Test User", email));
+        when(orderDao.findOrderById(orderId)).thenReturn(Optional.of(new Order(
+                orderId,
+                userId,
+                OrderStatus.PENDING,
+                5000,
+                "東京都文京区",
+                "123-4567",
+                "山崎",
+                LocalDateTime.now()
+        )));
+        when(orderDetailDao.findByOrderId(orderId)).thenReturn(List.of(
+                new OrderDetailDto(1L, orderId, 1L, "Tシャツ", "M", "Red", "image.jpg", 2500, 2)
+        ));
+
+        // Act
+        OrderDetailResponseDto result = orderService.getOrderDetail(email, orderId);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.orderId()).isEqualTo(orderId);
+    }
+
+    @Test
+    @DisplayName("存在しない注文IDで検索すると例外をスローすること")
+    void getOrderDetail_shouldThrowException_whenOrderNotFound() {
+        // Arrange
+        String email = "test@example.com";
+        Long orderId = 999L;
+
+        when(userService.findByEmail(email)).thenReturn(new UserDto(1L, "Test User", email));
+        when(orderDao.findOrderById(orderId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            orderService.getOrderDetail(email, orderId);
+        });
+    }
+
+    @Test
+    @DisplayName("他人の注文IDで検索すると例外をスローすること")
+    void getOrderDetail_shouldThrowException_whenOrderDoesNotBelongToUser() {
+        // Arrange
+        String email = "test@example.com";
+        Long myUserId = 1L;
+        Long otherUserId = 2L; // 他人のユーザーID
+        Long orderId = 101L;
+
+        when(userService.findByEmail(email)).thenReturn(new UserDto(myUserId, "Test User", email));
+
+        when(orderDao.findOrderById(orderId)).thenReturn(Optional.of(new Order(
+                orderId,
+                otherUserId,
+                OrderStatus.PENDING,
+                5000,
+                "東京都文京区",
+                "123-4567",
+                "山崎",
+                LocalDateTime.now()
+        )));
+
+        // Act & Assert
+        assertThrows(SecurityException.class, () -> {
+            orderService.getOrderDetail(email, orderId);
+        });
     }
 }

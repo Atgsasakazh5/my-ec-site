@@ -1,9 +1,8 @@
 package com.github.Atgsasakazh5.my_ec_site.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.Atgsasakazh5.my_ec_site.dto.CreateOrderRequestDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.OrderDetailDto;
-import com.github.Atgsasakazh5.my_ec_site.dto.PaymentRequestDto;
+import com.github.Atgsasakazh5.my_ec_site.dto.*;
+import com.github.Atgsasakazh5.my_ec_site.entity.OrderStatus;
 import com.github.Atgsasakazh5.my_ec_site.service.OrderService;
 import com.github.Atgsasakazh5.my_ec_site.service.PaymentService;
 import com.stripe.exception.CardException;
@@ -18,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -180,4 +181,61 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.message").value(stripeErrorMessage));
     }
 
+    @Test
+    @DisplayName("自分の注文概要一覧を取得できること")
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void getOrderSummaries_shouldSucceed() throws Exception {
+        // Arrange
+        var summaries = List.of(new OrderSummaryDto(1L, LocalDateTime.now(), 5000, OrderStatus.PAID));
+        when(orderService.getOrderSummaries("test@example.com")).thenReturn(summaries);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/orders"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].orderId").value(1L));
+    }
+
+    @Test
+    @DisplayName("自分の注文詳細を取得できること")
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void getOrderDetails_shouldSucceed() throws Exception {
+        // Arrange
+        var orderId = 1L;
+        var email = "test@example.com";
+        var detailResponse = new OrderDetailResponseDto(
+                orderId,
+                "Tokyo",
+                "100-0001",
+                "Test User",
+                5000,
+                OrderStatus.PAID,
+                LocalDateTime.now(),
+                List.of(new OrderDetailDto(1L, 1L, 101L, "Tシャツ", "S", "Red", null, 1500, 2)
+                ));
+        when(orderService.getOrderDetail(email, orderId)).thenReturn(detailResponse);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/orders/{orderId}", orderId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderId").value(orderId))
+                .andExpect(jsonPath("$.shippingAddress").value("Tokyo"));
+    }
+
+    @Test
+    @DisplayName("他人の注文詳細を取得しようとすると403エラーになること")
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void getOrderDetails_shouldReturnForbidden_forOtherUsersOrder() throws Exception {
+        // Arrange
+        var otherUserOrderId = 2L;
+        var email = "test@example.com";
+
+        // サービス層でSecurityExceptionがスローされる状況をモック
+        when(orderService.getOrderDetail(email, otherUserOrderId))
+                .thenThrow(new SecurityException("この注文にアクセスする権限がありません。"));
+
+        // Act & Assert
+        mockMvc.perform(get("/api/orders/{orderId}", otherUserOrderId))
+                .andExpect(status().isForbidden());
+    }
 }

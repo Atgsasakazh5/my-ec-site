@@ -7,7 +7,6 @@ import com.github.Atgsasakazh5.my_ec_site.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +122,7 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public OrderDetailResponse getOrderDetail(String email, Long orderId) {
+    public OrderDetailResponseDto getOrderDetail(String email, Long orderId) {
         UserDto user = userService.findByEmail(email);
 
         Order order = orderDao.findOrderById(orderId)
@@ -136,7 +135,7 @@ public class OrderService {
 
         List<OrderDetailDto> orderDetails = orderDetailDao.findByOrderId(orderId);
 
-        return new OrderDetailResponse(
+        return new OrderDetailResponseDto(
                 order.getId(),
                 order.getShippingAddress(),
                 order.getPostalCode(),
