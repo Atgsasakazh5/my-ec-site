@@ -126,7 +126,7 @@ public class CartItemDaoImpl implements CartItemDao {
                 rs.getString("color"),
                 rs.getInt("final_price"),
                 rs.getInt("quantity"),
-                rs.getInt("stock_quantity") // stock_quantityをマッピング
+                rs.getInt("stock_quantity")
         );
 
         return jdbcTemplate.query(sql, rowMapper, cartId);

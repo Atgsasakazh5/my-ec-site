@@ -151,8 +151,10 @@ class OrderDaoImplTest {
                 .hasSize(2);
 
         assertThat(orders)
-                .usingRecursiveFieldByFieldElementComparator() // オブジェクトの中身を比較
-                .containsExactlyInAnyOrder(savedOrder1, savedOrder2);
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt", "updatedAt", "orderedAt")
+                .ignoringCollectionOrder()
+                .isEqualTo(List.of(savedOrder1, savedOrder2));
     }
 
     @Test

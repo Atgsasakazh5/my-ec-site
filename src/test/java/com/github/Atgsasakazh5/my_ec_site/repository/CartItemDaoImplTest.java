@@ -61,6 +61,11 @@ class CartItemDaoImplTest {
         jdbcTemplate.update("INSERT INTO skus (product_id, size, color, extra_price, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
                 this.testProductId, "L", "Blue", 200, LocalDateTime.now(), LocalDateTime.now());
         this.testSkuId2 = jdbcTemplate.queryForObject("SELECT id FROM skus WHERE product_id = ? AND size = ? AND color = ?", Long.class, this.testProductId, "L", "Blue");
+        // 在庫も登録しないとjoinできない
+        jdbcTemplate.update("INSERT INTO inventories (sku_id, quantity, updated_at) VALUES (?, ?, ?)",
+                this.testSkuId1, 100, LocalDateTime.now());
+        jdbcTemplate.update("INSERT INTO inventories (sku_id, quantity, updated_at) VALUES (?, ?, ?)",
+                this.testSkuId2, 100, LocalDateTime.now());
     }
 
     @Test
@@ -205,17 +210,10 @@ class CartItemDaoImplTest {
     @DisplayName("カートIDでcartitemdtoのリストを取得できること")
     void findCartItemDtoByCartId() {
         // Arrange
-        var cartItem1 = new CartItem();
-        cartItem1.setCartId(testCartId);
-        cartItem1.setSkuId(testSkuId1);
-        cartItem1.setQuantity(2);
-        cartItemDao.save(cartItem1);
-
-        var cartItem2 = new CartItem();
-        cartItem2.setCartId(testCartId);
-        cartItem2.setSkuId(testSkuId2);
-        cartItem2.setQuantity(3);
-        cartItemDao.save(cartItem2);
+        jdbcTemplate.update("INSERT INTO cart_items (cart_id, sku_id, quantity) VALUES (?, ?, ?)",
+                testCartId, testSkuId1, 2);
+        jdbcTemplate.update("INSERT INTO cart_items (cart_id, sku_id, quantity) VALUES (?, ?, ?)",
+                testCartId, testSkuId2, 3);
 
         // Act
         var foundCartItems = cartItemDao.findDetailedItemsByCartId(testCartId);

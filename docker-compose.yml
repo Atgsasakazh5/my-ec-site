@@ -30,5 +30,6 @@ services:
       DB_PASSWORD: 1234
       # ホスト名はサービス名"db"を指定
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/my_ec_site_db_test
+      STRIPE_SECRET_KEY: ${STRIPE_API_KEY}
     # このコンテナで実行するコマンドを上書きし、テストを実行する
     command: ./mvnw test
