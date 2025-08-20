@@ -18,18 +18,27 @@ services:
   # Spring Bootアプリケーションサービス
   app:
     build:
-      context: .
-      target: builder
+      context: ./backend
+      args:
+        - APP_JWT_SECRET=${APP_JWT_SECRET}
+        - STRIPE_API_KEY=${STRIPE_API_KEY}
+    env_file:
+      - ./.env
     depends_on:
       db:
         condition: service_healthy # dbサービスが起動してからappサービスを起動する
     environment:
-      SPRING_PROFILES_ACTIVE: test  # 'test'プロファイルを有効にする
-      # Spring Bootが接続するDBの情報を環境変数で設定
+      SPRING_PROFILES_ACTIVE: test
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/my_ec_site_db_test
       DB_USERNAME: root
       DB_PASSWORD: 1234
-      # ホスト名はサービス名"db"を指定
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/my_ec_site_db_test
-      STRIPE_SECRET_KEY: ${STRIPE_API_KEY}
     # このコンテナで実行するコマンドを上書きし、テストを実行する
     command: ./mvnw test
+
+#  frontend:
+#    build: ./frontend # frontendディレクトリをビルド
+#    ports:
+#      - "3000:3000" # ローカルの3000番ポートをコンテナの3000番に接続
+#    volumes:
+#      - ./frontend:/app # ソースコードの変更を即時反映
+#      - /app/node_modules # node_modulesはコンテナ内のものを維持

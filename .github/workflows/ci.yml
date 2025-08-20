@@ -12,8 +12,7 @@ on:
 
 # 実行するジョブを定義
 jobs:
-  # 'build' という名前のジョブ
-  build:
+  backend-test:
     # ジョブを実行する仮想環境OSを指定
     runs-on: ubuntu-latest
 
@@ -36,4 +35,20 @@ jobs:
       - name: Run tests with Docker Compose
         env:
           STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
-        run: docker compose up --build --abort-on-container-exit --exit-code-from app
+        run:
+          cd backend
+          docker compose up --build --abort-on-container-exit --exit-code-from app
+
+  frontend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Test Frontend
+        # frontendフォルダに移動して実行
+        run: |
+          cd frontend
+          npm install
+          npm test
