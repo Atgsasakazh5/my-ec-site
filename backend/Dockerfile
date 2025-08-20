@@ -1,7 +1,7 @@
 # =================================================================
 # STAGE 1: ビルダー段階
 # =================================================================
-FROM eclipse-temurin:21-jdk-jammy AS builder
+FROM mcr.microsoft.com/openjdk/jdk:21-ubuntu AS builder
 
 ARG APP_JWT_SECRET
 ARG STRIPE_API_KEY
@@ -14,6 +14,7 @@ WORKDIR /app
 # 依存関係のキャッシュ
 COPY .mvn .mvn
 COPY mvnw .
+RUN chmod +x ./mvnw
 COPY pom.xml .
 RUN ./mvnw dependency:go-offline
 
@@ -28,7 +29,7 @@ RUN ./mvnw package -DskipTests
 # STAGE 2: 最終段階
 # =================================================================
 # より軽量なJRE（Java Runtime Environment）イメージを使用
-FROM eclipse-temurin:21-jre-jammy
+FROM mcr.microsoft.com/openjdk/jdk:21-ubuntu
 
 WORKDIR /app
 
