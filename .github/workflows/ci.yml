@@ -36,4 +36,4 @@ jobs:
       - name: Run tests with Docker Compose
         env:
           STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
-        run: docker compose -f docker-compose.ci.yml up --build --abort-on-container-exit --exit-code-from app
+        run: docker compose -f docker-compose.ci.yml up --build --exit-code-from app
