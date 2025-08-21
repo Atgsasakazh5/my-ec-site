@@ -1,35 +1,29 @@
 # =================================================================
-# STAGE 1: ビルダー段階 (テスト実行とビルドの両方に利用)
+# STAGE 1: ビルダー段階
 # =================================================================
-# 'builder' という名前をこのステージに付ける
 FROM eclipse-temurin:21-jdk-jammy AS builder
 
-# 作業ディレクトリを設定
 WORKDIR /app
 
-# Mavenのラッパーとpom.xmlを先にコピー
-COPY .mvn/ .mvn
+# 依存関係のキャッシュ
+COPY .mvn .mvn
 COPY mvnw .
 COPY pom.xml .
-
-# 依存関係をダウンロード
 RUN ./mvnw dependency:go-offline
 
 # ソースコードをコピー
 COPY src ./src
 
+RUN ./mvnw package -DskipTests
+
 
 # =================================================================
-# STAGE 2: 最終段階 (本番環境用の軽量イメージ)
+# STAGE 2: 最終段階
 # =================================================================
-FROM eclipse-temurin:21-jdk-jammy
+# より軽量なJREイメージを使用
+FROM eclipse-temurin:21-jre-jammy
 
-# 作業ディレクトリを設定
 WORKDIR /app
-
-RUN --mount=type=cache,target=/root/.m2 \
-    --mount=type=bind,source=.,target=/app \
-    ./mvnw package -DskipTests
 
 # builderステージから、作成されたJARファイルのみをコピー
 COPY --from=builder /app/target/*.jar app.jar
