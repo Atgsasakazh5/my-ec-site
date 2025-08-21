@@ -35,14 +35,6 @@ public class OrderController {
 
     }
 
-    @PostMapping("/payment")
-    public ResponseEntity<ApiResponse> handlePayment(
-            @Valid @RequestBody PaymentRequestDto request
-    ) {
-        paymentService.processPayment(request);
-        return ResponseEntity.ok(new ApiResponse(true, "支払いが完了しました。"));
-    }
-
     @GetMapping
     public ResponseEntity<List<OrderSummaryDto>> getOrderSummaries(
             Authentication authentication) {

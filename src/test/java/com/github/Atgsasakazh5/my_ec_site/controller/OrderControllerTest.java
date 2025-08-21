@@ -56,7 +56,8 @@ class OrderControllerTest {
         var request = new CreateOrderRequestDto(
                 "東京都千代田区",
                 "101-0111",
-                "島田");
+                "島田",
+                "credit_card");
 
         var responseDtoList = List.of(
                 new OrderDetailDto(1L, 1L, 101L, "Tシャツ", "S", "Red", null, 1500, 2)
@@ -82,7 +83,8 @@ class OrderControllerTest {
         var request = new CreateOrderRequestDto(
                 "東京都千代田区",
                 "101-0111",
-                "島田");
+                "島田",
+                "credit_card");
 
         // Act & Assert
         mockMvc.perform(post("/api/orders")
@@ -99,7 +101,8 @@ class OrderControllerTest {
         var invalidRequest = new CreateOrderRequestDto(
                 "",
                 "101-0111",
-                "島田");
+                "島田",
+                "credit_card");
 
         // Act & Assert
         mockMvc.perform(post("/api/orders")
@@ -114,7 +117,7 @@ class OrderControllerTest {
     @WithMockUser(username = "test@email.com", roles = "USER")
     void createOrder_shouldReturnConflict_whenCartIsEmpty() throws Exception {
         // Arrange
-        var request = new CreateOrderRequestDto("Tokyo", "100-0001", "Test User");
+        var request = new CreateOrderRequestDto("Tokyo", "100-0001", "Test User", "credit_card");
 
         when(orderService.placeOrder(anyString(), any(CreateOrderRequestDto.class)))
                 .thenThrow(new IllegalStateException("カートが空です"));
@@ -132,7 +135,7 @@ class OrderControllerTest {
     @WithMockUser(username = "test@email.com", roles = "USER")
     void createOrder_shouldReturnConflict_whenInventoryIsInsufficient() throws Exception {
         // Arrange
-        var request = new CreateOrderRequestDto("Tokyo", "100-0001", "Test User");
+        var request = new CreateOrderRequestDto("Tokyo", "100-0001", "Test User", "credit_card");
 
         when(orderService.placeOrder(anyString(), any(CreateOrderRequestDto.class)))
                 .thenThrow(new IllegalStateException("在庫が不足しています"));
@@ -143,42 +146,6 @@ class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("在庫が不足しています"));
-    }
-
-    @Test
-    @DisplayName("支払いが成功すること")
-    @WithMockUser(username = "test@email.com", roles = "USER")
-    void handlePayment_shouldSucceed() throws Exception {
-        // Arrange
-        var request = new PaymentRequestDto(1L, "pm_test");
-
-        // Act & Assert
-        mockMvc.perform(post("/api/orders/payment")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("支払いが完了しました。"));
-    }
-
-    @Test
-    @DisplayName("カードエラーで支払いが失敗すること")
-    @WithMockUser(username = "test@email.com", roles = "USER")
-    void handlePayment_shouldFail_whenCardIsDeclined() throws Exception {
-        // Arrange
-        var request = new PaymentRequestDto(1L, "pm_card_declined");
-        String stripeErrorMessage = "支払いが失敗しました。";
-
-        doThrow(new IllegalStateException(stripeErrorMessage))
-                .when(paymentService).processPayment(any(PaymentRequestDto.class));
-
-        // Act & Assert
-        mockMvc.perform(post("/api/orders/payment")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(stripeErrorMessage));
     }
 
     @Test

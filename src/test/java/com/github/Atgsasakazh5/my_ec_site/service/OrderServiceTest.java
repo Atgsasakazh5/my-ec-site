@@ -36,6 +36,9 @@ class OrderServiceTest {
     private UserService userService;
 
     @Mock
+    private PaymentService paymentService;
+
+    @Mock
     private CartDao cartDao;
 
     @Mock
@@ -139,15 +142,13 @@ class OrderServiceTest {
 
     @Test
     @DisplayName("注文の発行が成功すること-正常系")
-    void placeOrder_shouldSucceed_whenCartIsNotEmptyAndInventoryIsSufficient() {
+    void placeOrder_shouldSucceed() {
         // Arrange
         String email = "test@example.com";
         Long userId = 1L;
         Long cartId = 10L;
         Long skuId = 101L;
-        var request = new CreateOrderRequestDto("Tokyo", "100-0001", "Test User");
-
-        when(userService.findByEmail(email)).thenReturn(new UserDto(userId, "Test User", email));
+        var request = new CreateOrderRequestDto("Tokyo", "100-0001", "Test User", "pm_test");
 
         when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(new Cart(cartId, userId)));
 
@@ -157,20 +158,20 @@ class OrderServiceTest {
         var lockedInventories = List.of(new Inventory(301L, skuId, 10, null));
         when(inventoryDao.findBySkuIdsWithLock(List.of(skuId))).thenReturn(lockedInventories);
 
-        var savedOrder = new Order(501L, userId, OrderStatus.PENDING, 3000, "Tokyo", "100-0001", "Test User", LocalDateTime.now());
-
-        when(orderDao.findOrderById(savedOrder.getId())).thenReturn(Optional.of(savedOrder));
+        var savedOrder = new Order(501L, userId, OrderStatus.PAID, 3000, "Tokyo", "100-0001", "Test User", LocalDateTime.now());
         when(orderDao.saveOrder(any(Order.class))).thenReturn(savedOrder);
 
+        // getOrderDetailsのモック
+        when(orderDao.findOrderById(savedOrder.getId())).thenReturn(Optional.of(savedOrder));
+        when(userService.findByEmail(email)).thenReturn(new UserDto(userId, "Test User", email));
         when(orderDetailDao.findByOrderId(savedOrder.getId())).thenReturn(List.of());
 
-        // Act
+        // 2. Act
         orderService.placeOrder(email, request);
 
         // Assert
-        // 在庫、注文、注文明細、カートアイテム削除がそれぞれ1回ずつ呼ばれたことを検証
+        verify(paymentService, times(1)).processPayment(any(PaymentRequestDto.class));
         verify(inventoryDao, times(1)).updateAll(anyList());
-        verify(orderDao, times(1)).saveOrder(any(Order.class));
         verify(orderDetailDao, times(1)).save(anyList());
         verify(cartItemDao, times(1)).deleteByCartId(cartId);
     }
@@ -186,7 +187,7 @@ class OrderServiceTest {
 
         // Act & Assert
         assertThrows(IllegalStateException.class, () -> {
-            orderService.placeOrder(email, new CreateOrderRequestDto("Tokyo", "100-0001", "Test User"));
+            orderService.placeOrder(email, new CreateOrderRequestDto("Tokyo", "100-0001", "Test User", "credit_card"));
         });
     }
 
@@ -199,12 +200,12 @@ class OrderServiceTest {
         Long cartId = 10L;
         Long skuId = 101L;
 
-        var request = new CreateOrderRequestDto("Tokyo", "100-0001", "Test User");
+        var request = new CreateOrderRequestDto("Tokyo", "100-0001", "Test User", "credit_card");
 
         when(cartDao.findCartByEmail(email)).thenReturn(Optional.of(new Cart(cartId, userId)));
         var cartItems = List.of(new CartItemDto(201L, "T-Shirt", null, skuId, "M", "Red", 1500, 2, 10));
         when(cartItemDao.findDetailedItemsByCartId(cartId)).thenReturn(cartItems);
-        var lockedInventories = List.of(new Inventory(301L, skuId, 1, null)); // 在庫が1しかない
+        var lockedInventories = List.of(new Inventory(301L, skuId, 1, null));
         when(inventoryDao.findBySkuIdsWithLock(List.of(skuId))).thenReturn(lockedInventories);
 
         // Act & Assert

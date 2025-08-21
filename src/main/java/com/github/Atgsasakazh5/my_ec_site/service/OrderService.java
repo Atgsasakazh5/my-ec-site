@@ -27,13 +27,16 @@ public class OrderService {
 
     private final UserService userService;
 
-    public OrderService(OrderDao orderDao, OrderDetailDao orderDetailDao, InventoryDao inventoryDao, CartDao cartDao, CartItemDao cartItemDao, UserService userService) {
+    private final PaymentService paymentService;
+
+    public OrderService(OrderDao orderDao, OrderDetailDao orderDetailDao, InventoryDao inventoryDao, CartDao cartDao, CartItemDao cartItemDao, UserService userService, PaymentService paymentService) {
         this.orderDao = orderDao;
         this.orderDetailDao = orderDetailDao;
         this.inventoryDao = inventoryDao;
         this.cartDao = cartDao;
         this.cartItemDao = cartItemDao;
         this.userService = userService;
+        this.paymentService = paymentService;
     }
 
     @Transactional(readOnly = true)
@@ -60,55 +63,56 @@ public class OrderService {
         Cart cart = cartDao.findCartByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("カートが見つかりません: " + email));
 
-        // カートアイテムを取得
+        // カートの中身を取得
         List<CartItemDto> cartItems = cartItemDao.findDetailedItemsByCartId(cart.getId());
-
         if (cartItems.isEmpty()) {
             throw new IllegalStateException("カートが空です");
         }
 
-        // 在庫をロックして検証し、更新用リストを作成
+        // 在庫をロックして検証
         List<Long> skuIds = cartItems.stream().map(CartItemDto::skuId).toList();
         Map<Long, Inventory> lockedInventories = inventoryDao.findBySkuIdsWithLock(skuIds).stream()
                 .collect(Collectors.toMap(Inventory::getSkuId, i -> i));
 
-        List<Inventory> inventoryUpdates = new ArrayList<>();
         for (CartItemDto item : cartItems) {
             Inventory inventory = lockedInventories.get(item.skuId());
             if (inventory == null || inventory.getQuantity() < item.quantity()) {
                 throw new IllegalStateException("在庫が不足しています: SKU ID " + item.skuId());
             }
-            inventory.setQuantity(inventory.getQuantity() - item.quantity());
-            inventoryUpdates.add(inventory);
         }
 
-        // 在庫を一括更新
-        inventoryDao.updateAll(inventoryUpdates);
-
-        // 注文を作成
+        // PENDING状態で注文を作成・保存
         Order order = new Order();
         order.setUserId(cart.getUserId());
         order.setStatus(OrderStatus.PENDING);
-
-        // 合計金額を再計算
         int totalPrice = cartItems.stream().mapToInt(item -> item.price() * item.quantity()).sum();
         order.setTotalPrice(totalPrice);
         order.setShippingAddress(requestDto.shippingAddress());
+        order.setPostalCode(requestDto.postalCode());
+        order.setShippingName(requestDto.shippingName());
         Order savedOrder = orderDao.saveOrder(order);
+
+        // 決済処理を呼び出す
+        paymentService.processPayment(new PaymentRequestDto(savedOrder.getId(), requestDto.paymentMethodId()));
+
+        // 在庫を更新
+        List<Inventory> inventoryUpdates = cartItems.stream()
+                .map(item -> {
+                    Inventory inventory = lockedInventories.get(item.skuId());
+                    inventory.setQuantity(inventory.getQuantity() - item.quantity());
+                    return inventory;
+                })
+                .toList();
+        inventoryDao.updateAll(inventoryUpdates);
 
         // 注文明細を作成
         List<OrderDetail> orderDetails = cartItems.stream()
-                .map(item -> new OrderDetail(
-                        null,
-                        savedOrder.getId(),
-                        item.skuId(),
-                        item.quantity(),
-                        item.price()))
+                .map(item -> new OrderDetail(null, savedOrder.getId(), item.skuId(), item.quantity(), item.price()))
                 .toList();
         orderDetailDao.save(orderDetails);
 
         // カートを空にする
-        cartItemDao.deleteByCartId(cart.getId()); // <- DAOに新メソッドが必要
+        cartItemDao.deleteByCartId(cart.getId());
 
         // 注文詳細を返却
         return getOrderDetails(email, savedOrder.getId());
