@@ -14,6 +14,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Set;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -40,7 +42,7 @@ class AuthControllerTest {
         // Arrange
         var signUpRequestDto = new SignUpRequestDto("testuser", "test@email.com",
                 "password123", "Tokyo", true);
-        var expectedUserDto = new UserDto(1L, "testuser", "test@email.com");
+        var expectedUserDto = new UserDto(1L, "testuser", "test@email.com", Set.of("1", "ROLE_USER"));
 
         // Mock UserServiceのregisterメソッドの動作を定義
         when(userService.register(any(SignUpRequestDto.class))).thenReturn(expectedUserDto);

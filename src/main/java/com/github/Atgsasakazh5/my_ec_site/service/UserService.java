@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -55,15 +56,24 @@ public class UserService {
         User savedUser = userRepository.save(user);
         cartDao.saveCart(savedUser.getId());
 
+        Set<String> roles = savedUser.getRoles().stream()
+                .map(r -> r.getName().name())
+                .collect(Collectors.toSet());
+
         return new UserDto(savedUser.getId(),
                            savedUser.getName(),
-                           savedUser.getEmail());
+                           savedUser.getEmail(),
+                           roles);
     }
 
     public UserDto findByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません"));
 
-        return new UserDto(user.getId(), user.getName(), user.getEmail());
+        Set<String> roles = user.getRoles().stream()
+                .map(role -> role.getName().name())
+                .collect(Collectors.toSet());
+
+        return new UserDto(user.getId(), user.getName(), user.getEmail(), roles);
     }
 }

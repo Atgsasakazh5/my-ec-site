@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,7 +58,7 @@ class OrderServiceTest {
         String email = "test@email.com";
         Long orderId = 1L;
 
-        when(userService.findByEmail(email)).thenReturn(new UserDto(1L, email, "Test User"));
+        when(userService.findByEmail(email)).thenReturn(new UserDto(1L, email, "Test User", Set.of("3", "ROLE_TEST")));
         when(orderDao.findOrderById(orderId)).thenReturn(Optional.of(
                 new Order(
                         orderId,
@@ -104,7 +105,7 @@ class OrderServiceTest {
         Long myUserId = 10L;
         Long otherUserId = 20L;
 
-        when(userService.findByEmail(email)).thenReturn(new UserDto(myUserId, "me", email));
+        when(userService.findByEmail(email)).thenReturn(new UserDto(myUserId, "me", email, Set.of("3","ROLE_TEST")));
 
         when(orderDao.findOrderById(orderId)).thenReturn(Optional.of(
                 new Order(
@@ -131,7 +132,7 @@ class OrderServiceTest {
         String email = "test@email.com";
         Long orderId = 999L;
 
-        when(userService.findByEmail(email)).thenReturn(new UserDto(1L, email, "Test User"));
+        when(userService.findByEmail(email)).thenReturn(new UserDto(1L, email, "Test User", Set.of("3", "ROLE_TEST")));
         when(orderDao.findOrderById(orderId)).thenReturn(Optional.empty());
 
         // Act & Assert
@@ -163,7 +164,7 @@ class OrderServiceTest {
 
         // getOrderDetailsのモック
         when(orderDao.findOrderById(savedOrder.getId())).thenReturn(Optional.of(savedOrder));
-        when(userService.findByEmail(email)).thenReturn(new UserDto(userId, "Test User", email));
+        when(userService.findByEmail(email)).thenReturn(new UserDto(userId, "Test User", email, Set.of("3", "ROLE_TEST")));
         when(orderDetailDao.findByOrderId(savedOrder.getId())).thenReturn(List.of());
 
         // 2. Act
@@ -222,7 +223,7 @@ class OrderServiceTest {
         // Arrange
         String email = "test@email.com";
         Long userId = 1L;
-        when(userService.findByEmail(email)).thenReturn(new UserDto(userId, "Test User", email));
+        when(userService.findByEmail(email)).thenReturn(new UserDto(userId, "Test User", email, Set.of("3", "ROLE_TEST")));
 
         var now = LocalDateTime.now();
         var expectedSummaries = List.of(
@@ -248,7 +249,7 @@ class OrderServiceTest {
         Long userId = 1L;
         Long orderId = 101L;
 
-        when(userService.findByEmail(email)).thenReturn(new UserDto(userId, "Test User", email));
+        when(userService.findByEmail(email)).thenReturn(new UserDto(userId, "Test User", email, Set.of("3", "ROLE_TEST")));
         when(orderDao.findOrderById(orderId)).thenReturn(Optional.of(new Order(
                 orderId,
                 userId,
@@ -278,7 +279,7 @@ class OrderServiceTest {
         String email = "test@example.com";
         Long orderId = 999L;
 
-        when(userService.findByEmail(email)).thenReturn(new UserDto(1L, "Test User", email));
+        when(userService.findByEmail(email)).thenReturn(new UserDto(1L, "Test User", email, Set.of("3", "ROLE_TEST")));
         when(orderDao.findOrderById(orderId)).thenReturn(Optional.empty());
 
         // Act & Assert
@@ -296,7 +297,7 @@ class OrderServiceTest {
         Long otherUserId = 2L; // 他人のユーザーID
         Long orderId = 101L;
 
-        when(userService.findByEmail(email)).thenReturn(new UserDto(myUserId, "Test User", email));
+        when(userService.findByEmail(email)).thenReturn(new UserDto(myUserId, "Test User", email, Set.of("3", "ROLE_TEST")));
 
         when(orderDao.findOrderById(orderId)).thenReturn(Optional.of(new Order(
                 orderId,

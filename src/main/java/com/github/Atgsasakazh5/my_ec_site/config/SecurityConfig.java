@@ -56,7 +56,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/users/me",
                                 "/api/cart/**",
-                                "/api/orders/**"
+                                "/api/orders/**",
+                                "/api/cart",
+                                "/api/orders"
                         ).authenticated()
                         // 上記以外はすべて拒否
                         .anyRequest().denyAll()
