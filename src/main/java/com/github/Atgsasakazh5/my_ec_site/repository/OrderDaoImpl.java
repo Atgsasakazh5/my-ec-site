@@ -62,9 +62,9 @@ public class OrderDaoImpl implements OrderDao {
             ps.setTimestamp(7, Timestamp.valueOf(order.getOrderedAt()));
             return ps;
         }, keyHolder);
-        Map<String, Object> keys = keyHolder.getKeys();
-        if (keys != null && keys.containsKey("id")) {
-            order.setId(((Number) keys.get("id")).longValue());
+        Number key = keyHolder.getKey();
+        if (key != null) {
+            order.setId(key.longValue());
         } else {
             throw new IllegalStateException("データベースから生成されたIDの取得に失敗しました。");
         }
@@ -99,7 +99,7 @@ public class OrderDaoImpl implements OrderDao {
                 order.getShippingAddress(),
                 order.getPostalCode(),
                 order.getShippingName(),
-                order.getOrderedAt(),
+                Timestamp.valueOf(order.getOrderedAt()),
                 order.getId()
         );
 

@@ -22,13 +22,16 @@ public class PaymentService {
 
     private final String stripeSecretKey;
     private final OrderDao orderDao;
+    private final String stripeReturnUrl;
 
     public PaymentService(
             OrderDao orderDao,
-            @Value("${stripe.api.secret-key}") String stripeSecretKey
+            @Value("${stripe.api.secret-key}") String stripeSecretKey,
+            @Value("${app.stripe.return-url}") String stripeReturnUrl
     ) {
         this.orderDao = orderDao;
         this.stripeSecretKey = stripeSecretKey;
+        this.stripeReturnUrl = stripeReturnUrl;
     }
 
     @PostConstruct
@@ -51,6 +54,7 @@ public class PaymentService {
                     .setCurrency("jpy")
                     .setPaymentMethod(request.paymentMethodId())
                     .setConfirmationMethod(PaymentIntentCreateParams.ConfirmationMethod.MANUAL)
+                    .setReturnUrl(this.stripeReturnUrl)
                     .setConfirm(true)
                     .build();
 

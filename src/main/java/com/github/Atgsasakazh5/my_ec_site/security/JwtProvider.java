@@ -22,10 +22,10 @@ public class JwtProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtProvider.class);
 
-    @Value("${app.JWT_SECRET}")
+    @Value("${app.jwtSecret}")
     private String jwtSecret;
 
-    @Value("${app.JWT_EXPIRATION_MS}")
+    @Value("${app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
     // トークンを発行

@@ -31,6 +31,7 @@ services:
       # ホスト名はサービス名"db"を指定
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/my_ec_site_db_test
       STRIPE_SECRET_KEY: ${STRIPE_API_KEY}
+      STRIPE_RETURN_URL: http://localhost:3000/orders/success
     ports:
       - "8080:8080"
     # このコンテナで実行するコマンドを上書きし、テストを実行する
