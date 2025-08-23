@@ -104,4 +104,20 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.content[0].category.id").value(1))
                 .andExpect(jsonPath("$.content[0].category.name").value("トップス"));
     }
+
+    @Test
+    @DisplayName("IDでカテゴリを取得できること")
+    void getCategoryById_shouldReturnCategory() throws Exception {
+        // Arrange
+        int categoryId = 1;
+        var expectedCategory = new CategoryDto(categoryId, "トップス");
+
+        when(categoryService.searchCategoryById(categoryId)).thenReturn(expectedCategory);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/categories/{id}", categoryId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(categoryId))
+                .andExpect(jsonPath("$.name").value("トップス"));
+    }
 }

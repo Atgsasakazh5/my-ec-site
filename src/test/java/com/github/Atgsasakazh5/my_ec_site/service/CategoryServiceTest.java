@@ -136,4 +136,32 @@ class CategoryServiceTest {
         // Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> categoryService.deleteCategory(categoryId));
     }
+
+    @Test
+    @DisplayName("IDでカテゴリを検索し、dtoで返されること-正常系")
+    void searchCategoryById_shouldReturnCategoryDto_whenCategoryExists() {
+        // Arrange
+        int categoryId = 1;
+        var existingCategory = new Category(categoryId, "トップス");
+        when(categoryDao.findById(categoryId)).thenReturn(Optional.of(existingCategory));
+
+        // Act
+        var result = categoryService.searchCategoryById(categoryId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(categoryId, result.id());
+        assertEquals("トップス", result.name());
+    }
+
+    @Test
+    @DisplayName("存在しないIDでカテゴリを検索しようとするとResourceNotFoundExceptionが発生すること-異常系")
+    void searchCategoryById_shouldThrowResourceNotFoundException_whenCategoryDoesNotExist() {
+        // Arrange
+        int categoryId = 999;
+        when(categoryDao.findById(categoryId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> categoryService.searchCategoryById(categoryId));
+    }
 }

@@ -50,4 +50,8 @@ public class CategoryService {
         categoryDao.delete(id);
     }
 
+    public CategoryDto searchCategoryById(Integer id) {
+        var category = categoryDao.findById(id).orElseThrow(() -> new ResourceNotFoundException("カテゴリーが見つかりません。 ID: " + id));
+        return new CategoryDto(category.getId(), category.getName());
+    }
 }

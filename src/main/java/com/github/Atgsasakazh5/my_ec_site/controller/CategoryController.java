@@ -38,4 +38,10 @@ public class CategoryController {
         return ResponseEntity.ok(products);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<CategoryDto> getCategoryById(@PathVariable Integer id) {
+        CategoryDto category = categoryService.searchCategoryById(id);
+        return ResponseEntity.ok(category);
+    }
+
 }

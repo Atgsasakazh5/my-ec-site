@@ -53,6 +53,7 @@ public class SecurityConfig {
                         // 認証不要でリクエストを許可するパスを指定
                         .requestMatchers("/api/auth/**", "/api/products/**", "/api/categories/**").permitAll()
                         // "/api/admin/**"へのリクエストはADMINロールを持つユーザーのみ許可
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(
                                 "/api/users/me",
                                 "/api/cart/**",
