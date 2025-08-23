@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -16,11 +18,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @Import(RoleRepository.class)
- @ActiveProfiles("h2")
+@ActiveProfiles("h2")
+@Transactional
 class RoleRepositoryTest {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @DisplayName("ロール名でロールを検索できること")
     @Test

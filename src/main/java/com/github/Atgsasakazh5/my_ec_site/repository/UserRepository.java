@@ -1,6 +1,8 @@
 package com.github.Atgsasakazh5.my_ec_site.repository;
 
 import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
+import com.github.Atgsasakazh5.my_ec_site.entity.Role;
+import com.github.Atgsasakazh5.my_ec_site.entity.RoleName;
 import com.github.Atgsasakazh5.my_ec_site.entity.User;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,18 +13,10 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-
-interface UserDao {
-    Optional<User> findByName(String name);
-
-    Optional<User> findByEmail(String email);
-
-    boolean existsByEmail(String email);
-
-    User save(User user);
-}
+import java.util.Set;
 
 @Repository
 public class UserRepository implements UserDao {
@@ -48,13 +42,27 @@ public class UserRepository implements UserDao {
         return user;
     };
 
+    private Set<Role> findRolesByUserId(Long userId) {
+        String sql = "SELECT r.id, r.name FROM roles r " +
+                "JOIN user_roles ur ON r.id = ur.role_id " +
+                "WHERE ur.user_id = ?";
+
+        RowMapper<Role> roleRowMapper = (rs, rowNum) -> new Role(
+                rs.getInt("id"),
+                RoleName.valueOf(rs.getString("name"))
+        );
+
+        return new HashSet<>(jdbcTemplate.query(sql, roleRowMapper, userId));
+    }
+
     @Override
     public Optional<User> findByName(String name) {
         String sql = "SELECT * FROM users WHERE name = ?";
         try {
-            // queryForObjectは結果が1件であることを期待するメソッド
-            // 見つからない場合はEmptyResultDataAccessExceptionをスローする
             User user = jdbcTemplate.queryForObject(sql, userRowMapper, name);
+            if (user != null) {
+                user.setRoles(findRolesByUserId(user.getId()));
+            }
             return Optional.ofNullable(user);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -64,9 +72,12 @@ public class UserRepository implements UserDao {
     @Override
     public Optional<User> findByEmail(String email) {
         String sql = "SELECT * FROM users WHERE email = ?";
-        // queryForObjectの方が、結果が0件または2件以上の場合に例外を投げてくれるため、より安全
         try {
             User user = jdbcTemplate.queryForObject(sql, userRowMapper, email);
+            if (user != null) {
+                // ユーザーが見つかったら、ロール情報を取得してセットする
+                user.setRoles(findRolesByUserId(user.getId()));
+            }
             return Optional.ofNullable(user);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();

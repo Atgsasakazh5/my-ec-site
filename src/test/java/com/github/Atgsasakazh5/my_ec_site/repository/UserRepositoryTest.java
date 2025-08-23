@@ -1,13 +1,17 @@
 package com.github.Atgsasakazh5.my_ec_site.repository;
 
 import com.github.Atgsasakazh5.my_ec_site.entity.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,31 +19,37 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @Import(UserRepository.class)
- @ActiveProfiles("h2")
+@ActiveProfiles("h2")
+@Transactional
 class UserRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    protected Long testUserId = 1L;
+    protected String name = "testuser";
+    protected String email = "test@email.com";
+
     @DisplayName("ユーザー名でユーザーを検索できること")
     @Test
     void findByName_shouldReturnUser_whenNameExists() {
-        // Arrange
-        String name = "findByNameTestUser";
-        User user = new User();
-        user.setName(name);
-        user.setEmail("findByNameTestUser@mail.com");
-        user.setPassword("password123");
-        user.setAddress("123 Test St");
-        user.setSubscribingNewsletter(true);
-        userRepository.save(user);
 
         // Act
-        Optional<User> foundUser = userRepository.findByName(name);
+        Optional<User> foundUserOpt = userRepository.findByName(name);
 
         // Assert
-        assertTrue(foundUser.isPresent(), "ユーザーが見つかるはず");
-        assertEquals(name, foundUser.get().getName(), "ユーザー名が一致するはず");
+        assertThat(foundUserOpt).isPresent();
+        User foundUser = foundUserOpt.get();
+        assertThat(foundUser.getName()).isEqualTo(name);
+
+        assertThat(foundUser.getRoles()).isNotNull();
+        assertThat(foundUser.getRoles()).hasSize(1);
+        assertThat(foundUser.getRoles())
+                .extracting(role -> role.getName().name()) // RoleオブジェクトからEnum名(String)を抽出
+                .contains("ROLE_USER");
     }
 
     @DisplayName("ユーザー名が見つからなければ空のOptionalを返すこと")
@@ -59,22 +69,19 @@ class UserRepositoryTest {
     @Test
     void findByEmail_shouldReturnUser_whenEmailExists() {
 
-        // Arrange
-        String email = "test@mail.com";
-        User user = new User();
-        user.setName("testUser");
-        user.setEmail(email);
-        user.setPassword("password123");
-        user.setAddress("123 Test St");
-        user.setSubscribingNewsletter(true);
-        userRepository.save(user);
-
         // Act
-        Optional<User> foundUser = userRepository.findByEmail(email);
+        Optional<User> foundUserOpt = userRepository.findByEmail(email);
 
         // Assert
-        assertTrue(foundUser.isPresent(), "ユーザーが見つかるはず");
-        assertEquals(email, foundUser.get().getEmail(), "emailが一致するはず");
+        assertTrue(foundUserOpt.isPresent(), "ユーザーが見つかるはず");
+        assertEquals(email, foundUserOpt.get().getEmail(), "emailが一致するはず");
+
+        User foundUser = foundUserOpt.get();
+        assertThat(foundUser.getRoles()).isNotNull();
+        assertThat(foundUser.getRoles()).hasSize(1);
+        assertThat(foundUser.getRoles())
+                .extracting(role -> role.getName().name()) // RoleオブジェクトからEnum名(String)を抽出
+                .contains("ROLE_USER");
     }
 
     @DisplayName("Emailが見つからなければ空のOptionalを返すこと")
@@ -93,17 +100,6 @@ class UserRepositoryTest {
     @DisplayName("存在するEmailでチェックした場合、trueが返ること")
     @Test
     void existsByEmail_shouldReturnTrue_whenEmailExists() {
-
-        // Arrange
-        String email = "emailtest@mail.com";
-        User user = new User();
-        user.setName("testUsers");
-        user.setEmail(email);
-        user.setPassword("password123");
-        user.setAddress("123 Test St");
-        user.setSubscribingNewsletter(true);
-        userRepository.save(user);
-
         // Act
         boolean exists = userRepository.existsByEmail(email);
 
