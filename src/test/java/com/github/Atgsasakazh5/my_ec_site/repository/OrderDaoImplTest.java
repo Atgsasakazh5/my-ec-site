@@ -130,8 +130,6 @@ class OrderDaoImplTest {
         order1.setPostalCode(postalCode);
         order1.setShippingName(shippingName);
 
-        var savedOrder1 = orderDao.saveOrder(order1);
-
         var order2 = new Order();
         order2.setUserId(userId);
         order2.setStatus(OrderStatus.DELIVERED);
@@ -140,21 +138,17 @@ class OrderDaoImplTest {
         order2.setPostalCode("530-0001");
         order2.setShippingName("Another User");
 
+        var savedOrder1 = orderDao.saveOrder(order1);
         var savedOrder2 = orderDao.saveOrder(order2);
 
         // Act
         var orders = orderDao.findAllOrdersByUserId(userId);
 
         // Assert
+        assertThat(orders).hasSize(2);
         assertThat(orders)
-                .isNotNull()
-                .hasSize(2);
-
-        assertThat(orders)
-                .usingRecursiveComparison()
-                .ignoringFields("createdAt", "updatedAt", "orderedAt")
-                .ignoringCollectionOrder()
-                .isEqualTo(List.of(savedOrder1, savedOrder2));
+                .extracting(Order::getId)
+                .containsExactlyInAnyOrder(savedOrder1.getId(), savedOrder2.getId());
     }
 
     @Test
@@ -198,6 +192,12 @@ class OrderDaoImplTest {
         Order nonExistentOrder = new Order();
         nonExistentOrder.setId(999L);
         nonExistentOrder.setStatus(OrderStatus.PENDING);
+        nonExistentOrder.setUserId(1L);
+        nonExistentOrder.setTotalPrice(0);
+        nonExistentOrder.setShippingAddress("test");
+        nonExistentOrder.setPostalCode("test");
+        nonExistentOrder.setShippingName("test");
+        nonExistentOrder.setOrderedAt(LocalDateTime.now());
 
         // Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> {

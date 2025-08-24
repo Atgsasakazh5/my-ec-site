@@ -52,7 +52,7 @@ public class OrderDaoImpl implements OrderDao {
 
         var keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
-            var ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            var ps = connection.prepareStatement(sql, new String[]{"id"});
             ps.setLong(1, order.getUserId());
             ps.setString(2, order.getStatus().name());
             ps.setInt(3, order.getTotalPrice());
@@ -68,7 +68,10 @@ public class OrderDaoImpl implements OrderDao {
         } else {
             throw new IllegalStateException("データベースから生成されたIDの取得に失敗しました。");
         }
-        return order;
+        Long generatedId = keyHolder.getKey().longValue();
+
+        return findOrderById(generatedId)
+                .orElseThrow(() -> new IllegalStateException("保存した注文の取得に失敗しました"));
     }
 
     @Override

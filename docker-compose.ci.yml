@@ -7,8 +7,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: 1234 # テスト用の仮パスワード
       MYSQL_DATABASE: my_ec_site_db_test # テスト専用DB
-    ports:
-      - "3307:3306" # ローカルからDBにアクセスしたい場合用（CIでは不要）
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234" ]
       interval: 10s
@@ -30,7 +28,7 @@ services:
       DB_PASSWORD: 1234
       # ホスト名はサービス名"db"を指定
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/my_ec_site_db_test
-      STRIPE_SECRET_KEY: ${STRIPE_API_KEY}
-      STRIPE_RETURN_URL: http://localhost:3000/orders/success
+#      STRIPE_SECRET_KEY: test_api_key_1234567890
+#      STRIPE_RETURN_URL: http://localhost:3000/orders/success
     # このコンテナで実行するコマンドを上書きし、テストを実行する
     command: ./mvnw test
