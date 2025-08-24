@@ -1,6 +1,7 @@
 package com.github.Atgsasakazh5.my_ec_site.config;
 
 import com.github.Atgsasakazh5.my_ec_site.security.JwtAuthFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.DispatcherTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -39,7 +41,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         http
-                .cors(withDefaults())
+//                .cors(withDefaults())
                 // CSRF保護を無効化
                 .csrf(AbstractHttpConfigurer::disable)
                 // JWT認証フィルターを適用
@@ -50,8 +52,9 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // HTTPリクエストに対する認可設定
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(new DispatcherTypeRequestMatcher(DispatcherType.ERROR)).permitAll()
                         // 認証不要でリクエストを許可するパスを指定
-                        .requestMatchers("/api/auth/**", "/api/products/**", "/api/categories/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/products/**", "/api/categories/**", "/error").permitAll()
                         // "/api/admin/**"へのリクエストはADMINロールを持つユーザーのみ許可
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(

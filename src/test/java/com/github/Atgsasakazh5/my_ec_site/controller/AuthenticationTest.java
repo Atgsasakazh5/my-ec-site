@@ -1,20 +1,20 @@
 package com.github.Atgsasakazh5.my_ec_site.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.Atgsasakazh5.my_ec_site.config.SecurityConfig;
 import com.github.Atgsasakazh5.my_ec_site.dto.JwtAuthenticationResponseDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.LoginRequestDto;
-import com.github.Atgsasakazh5.my_ec_site.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,7 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-//@ActiveProfiles("h2")
+@ActiveProfiles("test")
+@Import(SecurityConfig.class)
 public class AuthenticationTest {
 
     @Autowired
