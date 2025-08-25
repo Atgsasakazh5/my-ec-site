@@ -35,5 +35,5 @@ jobs:
         # --- Docker上でテストを実行 ---
       - name: Run tests with Docker Compose
         env:
-          STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+          STRIPE_API_SECRET: ${{ secrets.STRIPE_API_KEY }}
         run: docker compose -f docker-compose.ci.yml up --build --exit-code-from app

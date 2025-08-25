@@ -41,7 +41,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         http
-//                .cors(withDefaults())
+                .cors(withDefaults())
                 // CSRF保護を無効化
                 .csrf(AbstractHttpConfigurer::disable)
                 // JWT認証フィルターを適用
@@ -52,7 +52,6 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // HTTPリクエストに対する認可設定
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(new DispatcherTypeRequestMatcher(DispatcherType.ERROR)).permitAll()
                         // 認証不要でリクエストを許可するパスを指定
                         .requestMatchers("/api/auth/**", "/api/products/**", "/api/categories/**", "/error").permitAll()
                         // "/api/admin/**"へのリクエストはADMINロールを持つユーザーのみ許可

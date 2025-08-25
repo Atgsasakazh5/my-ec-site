@@ -25,13 +25,13 @@ services:
         condition: service_healthy # dbサービスが起動してからappサービスを起動する
     environment:
       TZ: Asia/Tokyo
-      #      SPRING_PROFILES_ACTIVE: test  # 'test'プロファイルを有効にする
+      SPRING_PROFILES_ACTIVE: test  # 'test'プロファイルを有効にする
       # Spring Bootが接続するDBの情報を環境変数で設定
       DB_USERNAME: root
       DB_PASSWORD: 1234
       # ホスト名はサービス名"db"を指定
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/my_ec_site_db_test
-      STRIPE_SECRET_KEY: ${STRIPE_API_KEY}
+      STRIPE_API_SECRET: ${STRIPE_API_KEY}
       STRIPE_RETURN_URL: http://localhost:3000/orders/success
     ports:
       - "8080:8080"

@@ -11,7 +11,7 @@ VALUES
 INSERT INTO users
     (id, name, email, password, address, subscribing_newsletter, created_at, updated_at)
 VALUES
-    (2, 'admin', 'admin@email.com', '$2a$10$pWG6wyXFmoQNBV19LSHbN.1WRIranCc5Xgr/w.oyvSieQITsCZ80C',
+    (2, 'admin', 'admin@email.com', '$2a$10$FIZgNupQTxrwMQ33tWv1M.OLigO/gPQhEkcWMlwwQiyYIZKlPc6Ue',
      '東京', true, '2023-10-01 12:00:00', '2023-10-01 12:00:00');
 
 -- user_rolesテーブルで、user_id=1のユーザーにrole_id=1 (ROLE_USER) を紐付ける

@@ -1,6 +1,5 @@
 package com.github.Atgsasakazh5.my_ec_site.repository;
 
-import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.Role;
 import com.github.Atgsasakazh5.my_ec_site.entity.RoleName;
 import com.github.Atgsasakazh5.my_ec_site.entity.User;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -42,7 +40,8 @@ public class UserRepository implements UserDao {
         return user;
     };
 
-    private Set<Role> findRolesByUserId(Long userId) {
+    @Override
+    public Set<Role> findRolesByUserId(Long userId) {
         String sql = "SELECT r.id, r.name FROM roles r " +
                 "JOIN user_roles ur ON r.id = ur.role_id " +
                 "WHERE ur.user_id = ?";
