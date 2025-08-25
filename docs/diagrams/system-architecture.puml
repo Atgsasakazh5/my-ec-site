@@ -18,7 +18,7 @@ cloud "AWS" {
 }
 
 ' ====== 外部サービスの定義 ======
-cloud "External Services" {
+cloud "外部サービス" {
     component "Stripe" as stripe
     component "AWS SES" as ses
 }

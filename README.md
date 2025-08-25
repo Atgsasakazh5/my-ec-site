@@ -4,9 +4,17 @@ Spring BootとMySQLで構築した、基本的な機能を持つECサイトの�
 
 ## 概要
 
-このプロジェクトは、実際のWebアプリケーション開発で求められる基本的ながらも重要な技術要素（認証、商品管理、在庫管理、カート、注文処理など）を網羅的に実装したECサイトのバックエンドです。
+このプロジェクトは、Webアプリケーション開発で求められる基本的な技術要素（認証、商品管理、在庫管理、カート、注文処理など）を網羅的に実装したECサイトのバックエンドです。
 
-フロントエンド（Next.jsなどを想定）と連携し、ユーザーが商品を閲覧・購入できるオンラインストアの基盤を提供します。
+フロントエンド（Next.jsを想定）と連携し、ユーザーが商品を閲覧・購入できるオンラインストアの基盤を提供します。
+
+-----
+
+## 設計図
+
+![システム構成図](https://www.plantuml.com/plantuml/svg/TLDTJnD157tVNp7P5-41UE3DH4B16aqqGPR45r-6tR5iR7URdLqJD2JTcV21IY0Y9T54RKK-4Ag481KC_J6NtRR_mfdP5Wg5JJFTtNlEFNVEcHscFlRy89T5wL5as3v1AS-S4l-c7tW4zQ6ngMbgcpYhQNVGFNKXO6LWlu3LWF-3i19LFjNFTbf53Pk-wo7zl5feBEm1tvGOzaUiEi8K1PHuRGYm8s0Rm1VgbL9zPQvHc5KGRELifqCjzSoGQdm7c6YsMF_mEohpBbapwmOMqWLOHsyq92xJpULTXpY-U9l3hrq7fL-9fn7FjZBakTDZc5F42hB4wrMojFseARRZMaIEU0XS_EQ0luqgNnkbzucyOaY1m2SjkMkIHjwpdGmQSLqVfV9veIT6atTeF70Sug41z01x6UoJH7uIco-9OwbMCsfLYuLzF8afkTZ3-7r3z7eX_7ioRJnzd90zYzwCJcSnzUrHBFRMOeqJowO9YwYYAOkAJKKgE7D9DWO59rgRYrR3-iVJY2z3k0lXJikkGMsc8wHeezZasp9H4JTV1VRtjeIwaJS4PlYUdIU9aBgz3f1c6caZGH0gPkaOfbaidzTONDZgca4UFzJNDtIHtLsaFvoO63DqJHsxMsfQAntKtpyapPObuFFgQDU4I6Dt7y9Q_BaAuPBU2UxqM97OAN0Ex1ZubZXOCP-DlXqC0Di7_hrT-76r0nsKn7O05M1b2UJhmFULWui3qN8nEbllc59k8h5DKkE3axYw4CrlYcyCzQJ67lNgLv64AjZXTboShvTF6hjBm4kgzyyayJPBk_X6q5MRWA-eeS94HJfoT1ozMnFdfrauYFTAuirbJ_u5s1wmgZ2WERjqNYl9rjgmc2V8PVy3)
+
+![ER図](https://www.plantuml.com/plantuml/svg/fLRTRjn45BxVfnYr5sqXaHgat5HLr2Kni4hpGtuG4aAMinub1jlZZiUKq21XcwIB8b15rG0jeaHKPKlQf2XHAIYa3pFnRdBLL-ZCx3WxsOmRgTuBh-NpVyxCzvqh8R4mYJmN6CDWsY4G65CZbSevaDtRfl7cmSDL6jzltzkaoO-jEpiqRj1a5OIVEtvWOSkh7Bq1r_4XMGmWG9Wi84NW8H_L5p3o820uWfK5nuO0UW5P11xqvY0EURZ-_dv0aoPDjscwGfC_Ei-Nkmt-akxIT8sc6oztlsCvPPjtstkFk0KtfEb3Ba-UiQUgMu4-SLYCCr78Gfm1Dog0_Tu6ZWq-cHpz55m2xzRUhutFWCkNgn51DR-EeSTiXeQu8lCk_ju2lkL1flnHTMhuW-hK-NS61oz82VGin-qHCM-pldCjWjoDq0giCBoEiAttOTasXc6e5uRHN5Z7pXmCJHzU3rr82CGyyOc9gqPrN6gnl2q2RTCYJ3HJ6pEcPwfZar8O1RPE-BMOy9sLx7PCamtHwnsQ_gNjNvqvc4VOWTeclc47rGHqGGECxAXEtdXkPu5CUz7aXk_bkPuwr00xTNXCruPy205naCzxQ7oS2npFceTcX7lFGDcvjBQRhRMRshOWR4DSeYdyBiY6T8toqqOi4gadSV1YNWf1n7BDtjPqBktXylU7tyJPSgELBcU__ys_vGuNd21m_7cp-92hMW4AUPGwijNH35myeLWyFD6UrtQrzVCFxPsdnp6biV_yoU7QxHwWETvpquQ4tVOIhHTkzBq_om0rAXhBjSWIYSZ6AwUKbMaAhr8aofmUdUsfJjwoU2FRsgFnBmo_cKvdM6gPB8KIrSdxgY_Y79WO1oF6LMF60CFLwU7gY97FrFdg-B2Ffbr7Bi9w4VoIO4izZIKkdCpluC7Dx5P3KCcgO9EjhF6ilVCj4pD07wzzE6iC3O7ptIhxHEfzdJHpEFkrcVsteRstZly5U-KWMgB7yf0ewYhLwBgiFqAd8v3W15P3eu0Gi0QOYu56IRJ7VRQoNCG1Cexf4EYT5ameoc0dBvIs2JAHz8a8ozBvZIR_qkI5DX6Ct9BafsAgqWu-jFszrKjWYX6wMHqPguttTTvdfuqfcQEwtyJDRihnfiIjegN7pFFMp4H-uXhg9vatIt5ob1zuQTANArx8SrfN-lQO9i_PtjRUN6_VMj5casyl9RXBR4EVmJhH8_ySiXSbEvzEPs5z0TgHMmGL8GlUAoakc_7V_ejrFfRawId5cowQBt7_SqSQ6Yb7xooU7WhonLoiXe_5CVo7fd-ogiLBIjEVNh-FnyqExO81HZxPWxiLiOo3fQN-VdIZiym86sK7PJOTJ3YowIwWqZ1V3hkqpenKVZyoPI7KU0gHIwuiCcJuKMYM4sfJs6_b9dbMqenvK898RkXe3tJTBoq1XHkEWMFhqVs3z7_MtvFTbssK3WGULyHJnkuYPpUI-fN5KSUaOafHCEcZYoiL_jHyBhedUjyACaXNFTT5HjVBAbUWRqUU-me0)
 
 -----
 
@@ -94,14 +102,14 @@ Spring BootとMySQLで構築した、基本的な機能を持つECサイトの�
 ### 1\. 堅牢なデータアクセス層の構築
 
   * **JdbcTemplateの採用**:
-    ORM（JPA/Hibernate）に頼らず、`JdbcTemplate`と`NamedParameterJdbcTemplate`を全面的に採用しました。これにより、発行されるSQLを完全に制御し、N+1問題のようなパフォーマンスボトルネックを意識的に回避する設計を行いました。
+    `JdbcTemplate`と`NamedParameterJdbcTemplate`を採用し、N+1問題のようなパフォーマンスボトルネックを意識的に回避する設計を行いました。
   * **DAOパターンの実践**:
-    `RowMapper`や`KeyHolder`を活用し、データアクセスロジックをDAO層にカプセル化しました。
+    `RowMapper`や`KeyHolder`を活用し、データアクセスロジックをDAO層にまとめました。
 
 ### 2\. 拡張性を考慮したデータベース設計
 
   * **SKU層の導入**:
-    単なる商品管理に留まらず、サイズや色といった商品のバリエーションを管理するための`skus`テーブルを導入しました。これにより、実際のECサイトで求められる複雑な在庫・価格管理に対応できる、拡張性の高い設計を実現しました。
+    単なる商品管理に留まらず、サイズや色といった商品のバリエーションを管理するための`skus`テーブルを導入しました。これにより、実際のECサイトで求められる複雑な在庫・価格管理、オプション料金などに対応できる、拡張性の高い設計を実現しました。
 
 ### 3\. パフォーマンスとセキュリティへの配慮
 
@@ -116,7 +124,7 @@ Spring BootとMySQLで構築した、基本的な機能を持つECサイトの�
 
   * **テスト戦略の分離**:
     `@JdbcTest`（DAO層）、`@ExtendWith(MockitoExtension.class)`（サービス層）、`@SpringBootTest`（コントローラー層）を使い分け、各層の責務に応じた適切なテストを実装しました。
-  * **CI/CDパイプラインのDocker化**:
+  * **CI/CDの実践**:
     GitHub Actions上の自動テストをDockerコンテナ（MySQL含む）で実行するように構築しました。これにより、開発環境とCI環境の差異をなくし、より信頼性の高いテストを実現しました。
 
 -----
