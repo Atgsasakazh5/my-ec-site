@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,11 +43,11 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 // CSRF保護の設定
                 .csrf(csrf -> {
-                    CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-                    repository.setCookieDomain("localhost"); // ローカル開発用
-                    repository.setCookiePath("/");
-                    csrf.ignoringRequestMatchers("/api/auth/**", "/api/products/**", "/api/categories/**", "/error");
-                    csrf.csrfTokenRepository(repository);
+                    CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+                    requestHandler.setCsrfRequestAttributeName(null);
+                    csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                            .csrfTokenRequestHandler(requestHandler)
+                            .ignoringRequestMatchers("/api/auth/**");
                 })
                 // JWT認証フィルターを適用
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
