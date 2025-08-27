@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -71,6 +72,7 @@ class AdminProductControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/products")
+                        .with(csrf())
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -111,6 +113,7 @@ class AdminProductControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/products")
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -132,6 +135,7 @@ class AdminProductControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/products")
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -151,6 +155,7 @@ class AdminProductControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/products")
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -167,6 +172,7 @@ class AdminProductControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/products")
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -183,6 +189,7 @@ class AdminProductControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/products")
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -200,6 +207,7 @@ class AdminProductControllerTest {
                 List.of());
         // Act & Assert
         mockMvc.perform(post("/api/admin/products")
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -292,6 +300,7 @@ class AdminProductControllerTest {
 
         // Act & Assert
         mockMvc.perform(put("/api/admin/products/{id}", productId)
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -325,6 +334,7 @@ class AdminProductControllerTest {
 
         // Act & Assert
         mockMvc.perform(put("/api/admin/products/{id}", productId)
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
@@ -339,7 +349,8 @@ class AdminProductControllerTest {
         Long productId = 1L;
 
         // Act & Assert
-        mockMvc.perform(delete("/api/admin/products/{id}", productId))
+        mockMvc.perform(delete("/api/admin/products/{id}", productId)
+                        .with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -354,7 +365,8 @@ class AdminProductControllerTest {
                 .when(productService).deleteProduct(productId);
 
         // Act & Assert
-        mockMvc.perform(delete("/api/admin/products/{id}", productId))
+        mockMvc.perform(delete("/api/admin/products/{id}", productId)
+                        .with(csrf()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("商品が見つかりません。ID: 999"));
     }
@@ -379,6 +391,7 @@ class AdminProductControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/products/{id}/skus", productId)
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -401,6 +414,7 @@ class AdminProductControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/products/{id}/skus", productId)
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())

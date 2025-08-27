@@ -22,6 +22,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -52,6 +53,7 @@ class AdminCategoryControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/categories")
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -82,6 +84,7 @@ class AdminCategoryControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/categories")
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -98,6 +101,7 @@ class AdminCategoryControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/categories")
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -117,6 +121,7 @@ class AdminCategoryControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/admin/categories")
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
@@ -154,6 +159,7 @@ class AdminCategoryControllerTest {
 
         // Act & Assert
         mockMvc.perform(put("/api/admin/categories/{id}", categoryId)
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -173,6 +179,7 @@ class AdminCategoryControllerTest {
 
         // Act & Assert
         mockMvc.perform(put("/api/admin/categories/{id}", categoryId)
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
@@ -187,7 +194,9 @@ class AdminCategoryControllerTest {
         int categoryId = 1;
 
         // Act & Assert
-        mockMvc.perform(delete("/api/admin/categories/{id}", categoryId))
+        mockMvc.perform(delete("/api/admin/categories/{id}", categoryId)
+                        .with(csrf()))
+
                 .andExpect(status().isNoContent());
     }
 
@@ -201,7 +210,8 @@ class AdminCategoryControllerTest {
                 .when(categoryService).deleteCategory(categoryId);
 
         // Act & Assert
-        mockMvc.perform(delete("/api/admin/categories/{id}", categoryId))
+        mockMvc.perform(delete("/api/admin/categories/{id}", categoryId)
+                        .with(csrf()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("カテゴリーが見つかりません。ID: " + categoryId));
     }
