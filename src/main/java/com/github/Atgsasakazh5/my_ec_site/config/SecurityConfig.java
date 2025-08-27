@@ -1,19 +1,18 @@
 package com.github.Atgsasakazh5.my_ec_site.config;
 
 import com.github.Atgsasakazh5.my_ec_site.security.JwtAuthFilter;
-import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.DispatcherTypeRequestMatcher;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,8 +41,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         http
                 .cors(withDefaults())
-                // CSRF保護を無効化
-                .csrf(AbstractHttpConfigurer::disable)
+                // CSRF保護の設定
+                .csrf(csrf -> {
+                    CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+                    requestHandler.setCsrfRequestAttributeName(null);
+                    csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                            .csrfTokenRequestHandler(requestHandler)
+                            .ignoringRequestMatchers("/api/auth/**");
+                })
                 // JWT認証フィルターを適用
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 // セッション管理の設定を追加
@@ -84,7 +89,8 @@ public class SecurityConfig {
         // 許可するHTTPメソッド
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         // 許可するヘッダー
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN"));
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

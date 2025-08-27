@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -54,6 +55,7 @@ class CartControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/cart/items")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
@@ -81,6 +83,7 @@ class CartControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/cart/items")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -98,6 +101,7 @@ class CartControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/cart/items")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -115,6 +119,7 @@ class CartControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/cart/items")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
@@ -161,6 +166,7 @@ class CartControllerTest {
 
         // Act & Assert
         mockMvc.perform(put("/api/cart/items/{cartItemId}", cartItemId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -179,6 +185,7 @@ class CartControllerTest {
 
         // Act & Assert
         mockMvc.perform(put("/api/cart/items/{cartItemId}", cartItemId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -211,6 +218,7 @@ class CartControllerTest {
 
         // Act & Assert
         mockMvc.perform(put("/api/cart/items/{cartItemId}", cartItemId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
@@ -242,7 +250,8 @@ class CartControllerTest {
         var cartItemId = 1L;
 
         // Act & Assert
-        mockMvc.perform(delete("/api/cart/items/{cartItemId}", cartItemId))
+        mockMvc.perform(delete("/api/cart/items/{cartItemId}", cartItemId)
+                        .with(csrf()))
                 .andExpect(status().isNoContent());
     }
 

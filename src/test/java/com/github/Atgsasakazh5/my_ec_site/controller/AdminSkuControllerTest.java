@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -57,6 +58,7 @@ class AdminSkuControllerTest {
 
         // Act & Assert
         mockMvc.perform(put("/api/admin/skus/{skuId}", 1L)
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -99,6 +101,7 @@ class AdminSkuControllerTest {
 
         // Act & Assert
         mockMvc.perform(put("/api/admin/skus/{skuId}", 1L)
+                        .with(csrf())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -112,7 +115,8 @@ class AdminSkuControllerTest {
         var skuId = 1L;
 
         // Act & Assert
-        mockMvc.perform(delete("/api/admin/skus/{skuId}", skuId))
+        mockMvc.perform(delete("/api/admin/skus/{skuId}", skuId)
+                        .with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -126,7 +130,8 @@ class AdminSkuControllerTest {
                 .when(productService).deleteSku(skuId);
 
         // Act & Assert
-        mockMvc.perform(delete("/api/admin/skus/{skuId}", skuId))
+        mockMvc.perform(delete("/api/admin/skus/{skuId}", skuId)
+                        .with(csrf()))
                 .andExpect(status().isNotFound());
     }
 }
