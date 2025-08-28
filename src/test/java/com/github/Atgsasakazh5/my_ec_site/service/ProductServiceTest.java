@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 class ProductServiceTest {
 
     @InjectMocks
-    private ProductService productService;
+    private ProductServiceImpl productService;
 
     @Mock
     private ProductDao productDao;

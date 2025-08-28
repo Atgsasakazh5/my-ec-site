@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 class CartServiceTest {
 
     @InjectMocks
-    private CartService cartService;
+    private CartServiceImpl cartService;
 
     @Mock
     private CartDao cartDao;
