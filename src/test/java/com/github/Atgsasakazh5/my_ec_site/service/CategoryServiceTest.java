@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class CategoryServiceTest {
 
     @InjectMocks
-    private CategoryService categoryService;
+    private CategoryServiceImpl categoryService;
 
     @Mock
     private CategoryDao categoryDao;

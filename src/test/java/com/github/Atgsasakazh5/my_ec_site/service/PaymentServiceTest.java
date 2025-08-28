@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 class PaymentServiceTest {
 
     @InjectMocks
-    private PaymentService paymentService;
+    private PaymentServiceImpl paymentService;
 
     @Mock
     private OrderDao orderDao;
