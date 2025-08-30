@@ -19,8 +19,8 @@ public class EmailServiceImpl implements EmailService {
     public void sendVerificationEmail(String to, String token) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
-        message.setSubject("Email Verification");
-        message.setText("To verify your email, please click the following link: "
+        message.setSubject("メールアドレスの本人確認");
+        message.setText("こちらのリンクからメールアドレスの本人確認を行ってください: "
                 + "http://localhost:8080/api/auth/verify?token=" + token);
         mailSender.send(message);
     }
