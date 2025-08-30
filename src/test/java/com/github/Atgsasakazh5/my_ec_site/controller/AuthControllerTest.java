@@ -18,6 +18,7 @@ import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -92,4 +93,33 @@ class AuthControllerTest {
         verify(userService, times(1)).register(any(SignUpRequestDto.class));
 
         }
+
+    @Test
+    @DisplayName("ユーザー認証のテスト-正常系")
+    void verifyUser_shouldReturnOk_whenTokenIsValid() throws Exception {
+        // Arrange
+        String token = "valid-token";
+        doNothing().when(userService).verifyUser(token);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/auth/verify").param("token", token))
+                .andExpect(status().isOk());
+
+        verify(userService, times(1)).verifyUser(token);
+    }
+
+    @Test
+    @DisplayName("ユーザー認証のテスト-異常系: 無効なトークン")
+    void verifyUser_shouldReturnBadRequest_whenTokenIsInvalid() throws Exception {
+        // Arrange
+        String token = "invalid-token";
+        doThrow(new IllegalArgumentException("無効なトークンです")).when(userService).verifyUser(token);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/auth/verify").param("token", token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("無効なトークンです"));
+
+        verify(userService, times(1)).verifyUser(token);
+    }
 }

@@ -40,6 +40,7 @@ class UserDetailsServiceImplTest {
         user.setEmail(email);
         user.setPassword("password123");
         user.setRoles(Set.of()); // ロールは空のセット
+        user.setEmailVerified(true);
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
@@ -66,5 +67,26 @@ class UserDetailsServiceImplTest {
                 .isInstanceOf(UsernameNotFoundException.class)
                 .hasMessageContaining("メールアドレスで登録済みユーザーが見つかりません: " + email);
 
+    }
+
+    @Test
+    @DisplayName("認証されていないメールアドレスでUsernameNotFoundExceptionをスローする")
+    void loadUserByUsername_shouldThrowException_whenEmailIsNotVerified() {
+        // Arrange
+        String email = "test@example.com";
+        User user = new User();
+        user.setId(1L);
+        user.setName("Test User");
+        user.setEmail(email);
+        user.setPassword("password123");
+        user.setRoles(Set.of());
+        user.setEmailVerified(false);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        // Act & Assert
+        assertThatThrownBy(() -> userDetailsService.loadUserByUsername(email))
+                .isInstanceOf(UsernameNotFoundException.class)
+                .hasMessageContaining("メールアドレスが認証されていません: " + email);
     }
 }

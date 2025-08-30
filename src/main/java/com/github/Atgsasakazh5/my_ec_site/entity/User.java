@@ -25,6 +25,8 @@ public class User {
 
     private String address;
 
+    private boolean emailVerified;
+
     private boolean subscribingNewsletter;
 
     private LocalDateTime createdAt;
