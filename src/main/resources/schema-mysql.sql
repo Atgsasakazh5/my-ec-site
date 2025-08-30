@@ -1,5 +1,6 @@
 -- 既存のテーブルがあれば削除
 DROP TABLE IF EXISTS user_roles;
+DROP TABLE IF EXISTS verification_tokens;
 DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS order_details;
 DROP TABLE IF EXISTS orders;
