@@ -10,7 +10,7 @@ services:
     ports:
       - "3307:3306" # ローカルからDBにアクセスしたい場合用（CIでは不要）
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234" ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "db", "-u", "root", "-p1234" ]
       interval: 10s
       timeout: 5s
       retries: 5
