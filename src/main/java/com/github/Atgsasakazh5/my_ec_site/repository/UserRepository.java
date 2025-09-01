@@ -33,6 +33,7 @@ public class UserRepository implements UserDao {
         user.setEmail(rs.getString("email"));
         user.setPassword(rs.getString("password"));
         user.setAddress(rs.getString("address"));
+        user.setEmailVerified(rs.getBoolean("email_verified"));
         user.setSubscribingNewsletter(rs.getBoolean("subscribing_newsletter"));
         user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
@@ -91,9 +92,23 @@ public class UserRepository implements UserDao {
     }
 
     @Override
+    public Optional<User> findById(Long id) {
+        String sql = "SELECT * FROM users WHERE id = ?";
+        try {
+            User user = jdbcTemplate.queryForObject(sql, userRowMapper, id);
+            if (user != null) {
+                user.setRoles(findRolesByUserId(user.getId()));
+            }
+            return Optional.ofNullable(user);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
     public User save(User user) {
-        String sql = "INSERT INTO users (name, email, password, address, subscribing_newsletter, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
+        String sql = "INSERT INTO users (name, email, password, address, email_verified, subscribing_newsletter, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
         // 生成されたキー（ID）を格納するKeyHolderを準備
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -105,7 +120,8 @@ public class UserRepository implements UserDao {
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPassword());
             ps.setString(4, user.getAddress());
-            ps.setBoolean(5, user.isSubscribingNewsletter());
+            ps.setBoolean(5, user.isEmailVerified());
+            ps.setBoolean(6, user.isSubscribingNewsletter());
             return ps;
         }, keyHolder);
 
@@ -116,5 +132,13 @@ public class UserRepository implements UserDao {
         }
 
         return user;
+    }
+
+    @Override
+    public void update(User user) {
+        String sql = "UPDATE users SET name = ?, email = ?, password = ?, address = ?, email_verified = ?," +
+                " subscribing_newsletter = ?, updated_at = NOW() WHERE id = ?";
+        jdbcTemplate.update(sql, user.getName(), user.getEmail(), user.getPassword(), user.getAddress(),
+                user.isEmailVerified(), user.isSubscribingNewsletter(), user.getId());
     }
 }

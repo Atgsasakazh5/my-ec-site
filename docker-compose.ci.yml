@@ -30,5 +30,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/my_ec_site_db_test
       STRIPE_SECRET_KEY: test_api_key_1234567890
       STRIPE_RETURN_URL: http://localhost:3000/orders/success
+      GMAIL_USERNAME: ${GMAIL_USERNAME}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD}
     # このコンテナで実行するコマンドを上書きし、テストを実行する
     command: ./mvnw test

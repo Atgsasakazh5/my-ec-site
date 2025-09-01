@@ -13,7 +13,11 @@ public interface UserDao {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findById(Long id);
+
     boolean existsByEmail(String email);
 
     User save(User user);
+
+    void update(User user);
 }

@@ -5,12 +5,12 @@ services:
   db:
     image: mysql:latest
     environment:
-      MYSQL_ROOT_PASSWORD: 1234 # テスト用の仮パスワード
-      MYSQL_DATABASE: my_ec_site_db_test # テスト専用DB
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: my_ec_site_db
     ports:
       - "3307:3306" # ローカルからDBにアクセスしたい場合用（CIでは不要）
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -19,21 +19,19 @@ services:
   app:
     build:
       context: .
-    #      target: builder
     depends_on:
       db:
         condition: service_healthy # dbサービスが起動してからappサービスを起動する
     environment:
       TZ: Asia/Tokyo
-      SPRING_PROFILES_ACTIVE: test  # 'test'プロファイルを有効にする
-      # Spring Bootが接続するDBの情報を環境変数で設定
-      DB_USERNAME: root
-      DB_PASSWORD: 1234
-      # ホスト名はサービス名"db"を指定
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/my_ec_site_db_test
-      STRIPE_API_SECRET: ${STRIPE_API_KEY}
-      STRIPE_RETURN_URL: http://localhost:3000/orders/success
+#      SPRING_PROFILES_ACTIVE: test  # 'test'プロファイルを有効にする
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL}
+      STRIPE_RETURN_URL: ${STRIPE_RETURN_URL}
+      GMAIL_USERNAME: ${GMAIL_USERNAME}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD}
     ports:
       - "8080:8080"
-    # このコンテナで実行するコマンドを上書きし、テストを実行する
-#    command: ./mvnw test

@@ -5,9 +5,11 @@ import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.Role;
 import com.github.Atgsasakazh5.my_ec_site.entity.RoleName;
 import com.github.Atgsasakazh5.my_ec_site.entity.User;
+import com.github.Atgsasakazh5.my_ec_site.entity.VerificationToken;
 import com.github.Atgsasakazh5.my_ec_site.repository.CartDao;
 import com.github.Atgsasakazh5.my_ec_site.repository.RoleRepository;
 import com.github.Atgsasakazh5.my_ec_site.repository.UserRepository;
+import com.github.Atgsasakazh5.my_ec_site.repository.VerificationTokenDao;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +45,12 @@ class UserServiceTest {
 
     @Mock
     private CartDao cartDao;
+
+    @Mock
+    private VerificationTokenDao verificationTokenDao;
+
+    @Mock
+    private EmailService emailService;
 
     @Test
     @DisplayName("ユーザー登録のテスト-正常系")
@@ -88,6 +96,13 @@ class UserServiceTest {
         assertThat(savedUser.getEmail()).isEqualTo(signUpRequestDto.email());
         assertThat(savedUser.getPassword()).isEqualTo("hashedPassword");
         assertThat(savedUser.getRoles()).contains(userRole);
+        assertThat(savedUser.isEmailVerified()).isFalse();
+
+        // verificationTokenDao.save()が1回呼ばれたことを確認
+        verify(verificationTokenDao).save(any(com.github.Atgsasakazh5.my_ec_site.entity.VerificationToken.class));
+
+        // emailService.sendVerificationEmail()が1回呼ばれたことを確認
+        verify(emailService).sendVerificationEmail(eq(signUpRequestDto.email()), anyString());
 
         // 戻り値のUserDtoを検証
         assertThat(result).isNotNull();
@@ -118,5 +133,55 @@ class UserServiceTest {
         // 例外がスローされた後、他のリポジトリのメソッドが一切呼ばれていないことを確認
         verify(roleRepository, never()).findByName(any());
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("ユーザー認証のテスト-正常系")
+    void verifyUser_shouldSetEmailVerifiedToTrue_whenTokenIsValid() {
+        // Arrange
+        String token = "valid-token";
+        VerificationToken verificationToken = new VerificationToken(1L, token, 1L, java.time.LocalDateTime.now().plusHours(1));
+        User user = new User();
+        user.setId(1L);
+        user.setEmailVerified(false);
+
+        when(verificationTokenDao.findByToken(token)).thenReturn(Optional.of(verificationToken));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        // Act
+        userService.verifyUser(token);
+
+        // Assert
+        assertThat(user.isEmailVerified()).isTrue();
+        verify(userRepository).update(user);
+        verify(verificationTokenDao).delete(verificationToken);
+    }
+
+    @Test
+    @DisplayName("ユーザー認証のテスト-異常系: 無効なトークン")
+    void verifyUser_shouldThrowException_whenTokenIsInvalid() {
+        // Arrange
+        String token = "invalid-token";
+        when(verificationTokenDao.findByToken(token)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.verifyUser(token))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("無効なトークンです");
+    }
+
+    @Test
+    @DisplayName("ユーザー認証のテスト-異常系: 期限切れのトークン")
+    void verifyUser_shouldThrowException_whenTokenIsExpired() {
+        // Arrange
+        String token = "expired-token";
+        VerificationToken verificationToken = new VerificationToken(1L, token, 1L, java.time.LocalDateTime.now().minusHours(1));
+
+        when(verificationTokenDao.findByToken(token)).thenReturn(Optional.of(verificationToken));
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.verifyUser(token))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("トークンの有効期限が切れています");
     }
 }

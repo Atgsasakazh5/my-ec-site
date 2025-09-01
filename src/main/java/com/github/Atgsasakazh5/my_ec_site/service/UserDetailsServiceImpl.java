@@ -29,6 +29,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userDao.findByEmail(email).orElseThrow(() ->
                 new UsernameNotFoundException("メールアドレスで登録済みユーザーが見つかりません: " + email));
 
+        if (!user.isEmailVerified()) {
+            throw new UsernameNotFoundException("メールアドレスが認証されていません: " + email);
+        }
+
         // UserのrolesをGrantedAuthorityのコレクションに変換
         Collection<? extends GrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName().name()))

@@ -4,14 +4,18 @@ import com.github.Atgsasakazh5.my_ec_site.dto.SignUpRequestDto;
 import com.github.Atgsasakazh5.my_ec_site.dto.UserDto;
 import com.github.Atgsasakazh5.my_ec_site.entity.RoleName;
 import com.github.Atgsasakazh5.my_ec_site.entity.User;
+import com.github.Atgsasakazh5.my_ec_site.entity.VerificationToken;
 import com.github.Atgsasakazh5.my_ec_site.repository.CartDao;
 import com.github.Atgsasakazh5.my_ec_site.repository.RoleRepository;
 import com.github.Atgsasakazh5.my_ec_site.repository.UserRepository;
+import com.github.Atgsasakazh5.my_ec_site.repository.VerificationTokenDao;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,12 +25,16 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final CartDao cartDao;
+    private final VerificationTokenDao verificationTokenDao;
+    private final EmailService emailService;
 
-    public UserServiceImpl(PasswordEncoder passwordEncoder, UserRepository userRepository, RoleRepository roleRepository, CartDao cartDao) {
+    public UserServiceImpl(PasswordEncoder passwordEncoder, UserRepository userRepository, RoleRepository roleRepository, CartDao cartDao, VerificationTokenDao verificationTokenDao, EmailService emailService) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.cartDao = cartDao;
+        this.verificationTokenDao = verificationTokenDao;
+        this.emailService = emailService;
     }
 
     @Override
@@ -50,11 +58,21 @@ public class UserServiceImpl implements UserService {
         user.setEmail(signUpRequestDto.email());
         user.setPassword(hashedPassword);
         user.setAddress(signUpRequestDto.address());
+        user.setEmailVerified(false);
         user.setSubscribingNewsletter(signUpRequestDto.subscribingNewsletter());
         user.setRoles(Set.of(role));
 
         User savedUser = userRepository.save(user);
         cartDao.saveCart(savedUser.getId());
+
+        String token = UUID.randomUUID().toString();
+        VerificationToken verificationToken = new VerificationToken();
+        verificationToken.setToken(token);
+        verificationToken.setUserId(savedUser.getId());
+        verificationToken.setExpiryDate(LocalDateTime.now().plusHours(24));
+        verificationTokenDao.save(verificationToken);
+
+        emailService.sendVerificationEmail(savedUser.getEmail(), token);
 
         Set<String> roles = savedUser.getRoles().stream()
                 .map(r -> r.getName().name())
@@ -76,5 +94,24 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toSet());
 
         return new UserDto(user.getId(), user.getName(), user.getEmail(), roles);
+    }
+
+    @Override
+    @Transactional
+    public void verifyUser(String token) {
+        VerificationToken verificationToken = verificationTokenDao.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("無効なトークンです"));
+
+        if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("トークンの有効期限が切れています");
+        }
+
+        User user = userRepository.findById(verificationToken.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません"));
+
+        user.setEmailVerified(true);
+        userRepository.update(user);
+
+        verificationTokenDao.delete(verificationToken);
     }
 }
