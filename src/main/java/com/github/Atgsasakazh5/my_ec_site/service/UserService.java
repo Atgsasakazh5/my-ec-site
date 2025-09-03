@@ -7,4 +7,5 @@ public interface UserService {
     UserDto register(SignUpRequestDto signUpRequestDto);
     UserDto findByEmail(String email);
     void verifyUser(String token);
+    void createAdminUserIfNotFound(String email, String password);
 }

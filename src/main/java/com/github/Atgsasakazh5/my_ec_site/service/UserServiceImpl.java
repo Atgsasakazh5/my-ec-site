@@ -114,4 +114,26 @@ public class UserServiceImpl implements UserService {
 
         verificationTokenDao.delete(verificationToken);
     }
+
+    @Override
+    @Transactional
+    public void createAdminUserIfNotFound(String email, String password) {
+        if (!userRepository.existsByEmail(email)) {
+            var adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
+                    .orElseThrow(() -> new IllegalStateException("管理者ロールが見つかりません"));
+            var userRole = roleRepository.findByName(RoleName.ROLE_USER)
+                    .orElseThrow(() -> new IllegalStateException("ユーザーロールが見つかりません"));
+
+            User admin = new User();
+            admin.setName("Admin");
+            admin.setEmail(email);
+            admin.setPassword(passwordEncoder.encode(password));
+            admin.setAddress("Admin Address");
+            admin.setEmailVerified(true);
+            admin.setSubscribingNewsletter(false);
+            admin.setRoles(Set.of(adminRole, userRole));
+
+            userRepository.save(admin);
+        }
+    }
 }
