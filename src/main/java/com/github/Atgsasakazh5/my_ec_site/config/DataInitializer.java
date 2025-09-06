@@ -3,9 +3,11 @@ package com.github.Atgsasakazh5.my_ec_site.config;
 import com.github.Atgsasakazh5.my_ec_site.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 @Component
+@DependsOn("sqlScriptDatabaseInitializer")
 public class DataInitializer implements CommandLineRunner {
 
     private final UserService userService;

@@ -5,7 +5,7 @@ name: Java CI with Maven
 on:
   # mainブランチにpushされた時
   push:
-    branches: [ "develop" ]
+    branches: [ "main" ]
   # mainブランチに対するPull Requestが作成・更新された時
   pull_request:
     branches: [ "develop" ]
